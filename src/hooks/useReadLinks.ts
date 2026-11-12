@@ -15,9 +15,9 @@ export interface ReadLinks {
 }
 
 /**
- * Merkt sich geöffnete Artikel im Browser. Die Markierung über besuchte Links (`:visited`) reicht
- * dafür nicht: In der App vom Homescreen öffnen Artikel in einem eigenen Browserfenster, dessen
- * Verlauf die App nicht sieht.
+ * Remembers opened articles in the browser. The styling of visited links (`:visited`) is not
+ * enough for this: in the app from the home screen, articles open in a separate browser window
+ * whose history the app cannot see.
  */
 export function useReadLinks(): ReadLinks {
   const [read, setRead] = useState(() => new Set(load()));
@@ -31,14 +31,14 @@ export function useReadLinks(): ReadLinks {
   }, []);
 
   const markRead = useCallback((link: string) => {
-    // Vom gespeicherten Stand ausgehen, damit Einträge aus anderen Tabs erhalten bleiben.
+    // Start from the stored state, so entries from other tabs are kept.
     const before = load();
     const next = addRead(before, hashLink(link));
     if (next === before) return;
     try {
       localStorage.setItem(READ_KEY, JSON.stringify(next));
     } catch {
-      // ohne Speicher gilt die Markierung nur bis zum Neuladen
+      // without storage the marking only lasts until the next reload
     }
     setRead(new Set(next));
   }, []);

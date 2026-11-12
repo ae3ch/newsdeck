@@ -32,7 +32,7 @@ export const Code = ({ children }: { children: ReactNode }) => (
   <code className="rounded bg-sunken px-1 py-0.5 font-mono text-[13px]">{children}</code>
 );
 
-/** Wer die Website betreibt – allgemeine Formulierung, solange in site.ts nichts eingetragen ist. */
+/** Who operates the website – generic wording as long as nothing is filled in in site.ts. */
 export const operatorName = () => SITE.operator || `the operator of ${SITE.name}`;
 
 export function Contact() {

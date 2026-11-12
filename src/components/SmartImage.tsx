@@ -3,20 +3,20 @@ import { thumbUrl } from '../lib/image';
 
 interface Props {
   src: string | undefined;
-  /** Anzeigegrösse in CSS-Pixeln; bestimmt die angeforderte Bildgrösse. */
+  /** Display size in CSS pixels; determines the requested image size. */
   width: number;
   height: number;
   className?: string;
-  /** Wird gezeigt, wenn es kein Bild gibt oder es sich nicht laden lässt. */
+  /** Shown when there is no image or it cannot be loaded. */
   fallback: ReactNode;
 }
 
 /**
- * Lädt ein Bild zuerst verkleinert über den Bilddienst, bei einem Fehler dort das Original
- * und zeigt erst dann den Platzhalter.
+ * Loads an image downscaled through the image service first, on failure the original,
+ * and only then shows the placeholder.
  */
 export function SmartImage({ src, width, height, className, fallback }: Props) {
-  // Fehlversuche gelten nur für die Adresse, bei der sie auftraten.
+  // Failed attempts only count for the address where they happened.
   const [failed, setFailed] = useState<{ src: string; stage: number } | null>(null);
   if (!src) return <>{fallback}</>;
 

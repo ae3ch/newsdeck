@@ -3,8 +3,8 @@ import { categoryLabel } from '../data/defaultSources';
 import { MAX_SOURCES, hostOf, isHttpUrl, isVisible, newSourceId, type DashboardConfig, type Source } from './config';
 
 /**
- * OPML ist das Austauschformat der RSS-Reader. Dieses Modul wird erst geladen, wenn jemand
- * importiert oder exportiert (siehe CustomSources), damit der XML-Parser nicht im Startpaket landet.
+ * OPML is the exchange format of RSS readers. This module loads only when someone imports
+ * or exports (see CustomSources), so the XML parser does not end up in the initial bundle.
  */
 
 export interface OpmlFeed {
@@ -15,17 +15,17 @@ export interface OpmlFeed {
 
 export interface OpmlResult {
   config: DashboardConfig;
-  /** Neu als eigene Quelle angelegt. */
+  /** Newly added as a custom source. */
   added: number;
-  /** Bereits vorhanden, aber abgewählt; jetzt eingeschaltet. */
+  /** Already present but deselected; now turned on. */
   enabled: number;
-  /** Bereits vorhanden und aktiv. */
+  /** Already present and active. */
   present: number;
-  /** Wegen der Höchstzahl an Quellen nicht übernommen. */
+  /** Not added because of the maximum number of sources. */
   skipped: number;
 }
 
-// Entities löst der Parser bewusst nicht auf (Schutz vor Entity-Expansion); decode() erledigt die üblichen.
+// The parser deliberately does not resolve entities (protection against entity expansion); decode() handles the common ones.
 const parser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: '',
@@ -62,7 +62,7 @@ const attr = (node: Record<string, unknown>, ...names: string[]): string | undef
   return undefined;
 };
 
-/** Normalisiert eine Feed-Adresse für den Vergleich (Gross/Klein im Host, Standardschreibweise). */
+/** Normalizes a feed address for comparison (host case, standard notation). */
 const sameFeed = (url: string): string => {
   try {
     return new URL(url).toString();
@@ -71,7 +71,7 @@ const sameFeed = (url: string): string => {
   }
 };
 
-/** Liest alle Feeds aus einer OPML-Datei, beliebig tief verschachtelt. Wirft bei unlesbaren Dateien. */
+/** Reads all feeds from an OPML file, nested to any depth. Throws on unreadable files. */
 export function parseOpml(text: string): OpmlFeed[] {
   if (/<!(DOCTYPE|ENTITY)/i.test(text)) throw new Error('The file contains unsupported XML declarations.');
   let doc: unknown;
@@ -107,7 +107,7 @@ export function parseOpml(text: string): OpmlFeed[] {
   return feeds;
 }
 
-/** Übernimmt Feeds ins Layout: vorhandene einschalten, unbekannte als eigene Quellen vorn anfügen. */
+/** Adds feeds to the layout: turns existing ones on, adds unknown ones as custom sources at the front. */
 export function mergeOpml(config: DashboardConfig, feeds: OpmlFeed[]): OpmlResult {
   const sources = config.sources.slice();
   const byFeed = new Map(sources.map((s, i) => [sameFeed(s.feedUrl), i]));
@@ -118,7 +118,7 @@ export function mergeOpml(config: DashboardConfig, feeds: OpmlFeed[]): OpmlResul
   for (const feed of feeds) {
     const i = byFeed.get(sameFeed(feed.feedUrl));
     if (i !== undefined) {
-      // -1: in diesem Import schon angelegt.
+      // -1: already added in this import.
       if (i < 0 || sources[i].enabled) present++;
       else {
         sources[i] = { ...sources[i], enabled: true };
@@ -146,7 +146,7 @@ export function mergeOpml(config: DashboardConfig, feeds: OpmlFeed[]): OpmlResul
 const escapeXml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-/** OPML 2.0 mit den aktiven Quellen, gruppiert nach Thema; eigene Quellen unter «Custom». */
+/** OPML 2.0 with the active sources, grouped by topic; custom sources under «Custom». */
 export function toOpml(config: DashboardConfig, now = new Date()): string {
   const groups = new Map<string, Source[]>();
   for (const s of config.sources) {

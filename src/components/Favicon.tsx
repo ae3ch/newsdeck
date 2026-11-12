@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { faviconUrl } from '../lib/format';
 
-/** Favicon einer Quelle; fällt bei Ladefehler auf den Anfangsbuchstaben zurück. */
+/** Favicon of a source; falls back to the first letter when it fails to load. */
 export function Favicon({ siteUrl, name, size = 18 }: { siteUrl: string; name: string; size?: number }) {
   const [failed, setFailed] = useState(false);
   const src = faviconUrl(siteUrl);

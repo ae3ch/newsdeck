@@ -13,7 +13,7 @@ describe('validatePublicUrl', () => {
 
   it.each([
     '',
-    'kein-url',
+    'not-a-url',
     'ftp://example.com/feed',
     'file:///etc/passwd',
     'javascript:alert(1)',
@@ -41,18 +41,18 @@ describe('validatePublicUrl', () => {
 });
 
 describe('decodeBody', () => {
-  it('liest ISO-8859-1 laut XML-Prolog', () => {
+  it('reads ISO-8859-1 according to the XML prolog', () => {
     const text = '<?xml version="1.0" encoding="ISO-8859-1"?><t>Grüße</t>';
     const bytes = Uint8Array.from(text, (c) => c.charCodeAt(0));
     expect(decodeBody(bytes, 'text/xml')).toContain('Grüße');
   });
-  it('liest UTF-8 als Standard und laut Content-Type', () => {
+  it('reads UTF-8 by default and according to Content-Type', () => {
     const bytes = new TextEncoder().encode('<rss>Grüße</rss>');
     expect(decodeBody(bytes, '')).toContain('Grüße');
     expect(decodeBody(bytes, 'application/xml; charset="UTF-8"')).toContain('Grüße');
   });
-  it('fällt bei unbekanntem Charset auf UTF-8 zurück', () => {
+  it('falls back to UTF-8 for an unknown charset', () => {
     const bytes = new TextEncoder().encode('<rss>ok</rss>');
-    expect(decodeBody(bytes, 'text/xml; charset=gibts-nicht')).toBe('<rss>ok</rss>');
+    expect(decodeBody(bytes, 'text/xml; charset=does-not-exist')).toBe('<rss>ok</rss>');
   });
 });

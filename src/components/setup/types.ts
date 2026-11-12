@@ -1,22 +1,22 @@
 import type { DashboardConfig, Settings } from '../../lib/config';
 import type { NewSource } from '../AddSourceForm';
 
-/** Alle Änderungen, die Anpassen-Seite und Einrichtung am Layout vornehmen können. */
+/** All changes the customize page and the setup can make to the layout. */
 export interface SetupActions {
   onToggle: (id: string) => void;
-  /** Schaltet mehrere Quellen auf einmal ein oder aus (z. B. ein ganzes Thema). */
+  /** Turns several sources on or off at once (e.g. a whole topic). */
   onSetMany: (ids: string[], enabled: boolean) => void;
   onShift: (id: string, delta: -1 | 1) => void;
   onRemove: (id: string) => void;
   onAdd: (source: NewSource) => void;
-  /** Ersetzt die Feed-Adresse einer Quelle (z. B. nach einem Umzug des Feeds). */
+  /** Replaces the feed address of a source (e.g. after the feed has moved). */
   onReplaceFeed: (id: string, feedUrl: string) => void;
   onSettings: (patch: Partial<Settings>) => void;
   onReplace: (config: DashboardConfig) => void;
   onReset: () => void;
 }
 
-// Die Klassen stehen zentral in ui.tsx; hier unter den bisherigen Namen für die Einrichtungsansichten.
+// The classes live centrally in ui.tsx; here under their previous names for the setup views.
 export {
   btnSecondary as textButton,
   btnSmall as smallButton,

@@ -4,7 +4,7 @@ import { Favicon } from '../Favicon';
 import { ArrowDownIcon, ArrowUpIcon } from '../icons';
 import { iconButton } from './types';
 
-/** Reihenfolge der aktiven Quellen auf dem Dashboard. */
+/** Order of the active sources on the dashboard. */
 export function OrderList({ sources, onShift }: { sources: Source[]; onShift: (id: string, delta: -1 | 1) => void }) {
   const active = sources.filter((s) => s.enabled);
   if (active.length === 0) return <p className="text-sm text-muted">No sources active yet.</p>;

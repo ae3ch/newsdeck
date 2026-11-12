@@ -1,6 +1,6 @@
 const dateFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
-/** "5 min ago" – relativ zu `now` (ms). Leerer String bei fehlendem Datum. */
+/** "5 min ago" – relative to `now` (ms). Empty string when the date is missing. */
 export function relativeTime(iso: string | null, now: number): string {
   if (!iso) return '';
   const t = Date.parse(iso);

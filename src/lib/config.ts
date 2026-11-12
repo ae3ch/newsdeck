@@ -5,7 +5,7 @@ import { cleanMutedWords } from './mute';
 export type Theme = 'system' | 'light' | 'dark';
 export type Lang = 'de' | 'en';
 
-/** Wählbare Inhaltssprachen, in Anzeige-Reihenfolge. */
+/** Selectable content languages, in display order. */
 export const LANGUAGES: { id: Lang; label: string }[] = [
   { id: 'de', label: 'German' },
   { id: 'en', label: 'English' },
@@ -16,11 +16,11 @@ export interface Source {
   name: string;
   siteUrl: string;
   feedUrl: string;
-  /** id einer Kategorie aus dem Katalog; fehlt bei eigenen Quellen. */
+  /** id of a catalog category; missing for custom sources. */
   category?: string;
   lang?: Lang;
   enabled: boolean;
-  /** true = vom Nutzer hinzugefügt (löschbar), false = mitgelieferte Startquelle. */
+  /** true = added by the user (deletable), false = built-in source. */
   custom: boolean;
 }
 
@@ -29,18 +29,18 @@ export interface Settings {
   articlesPerCard: number;
   showTopStories: boolean;
   showImages: boolean;
-  /** Sprachen, in denen Inhalte gezeigt werden; nie leer. */
+  /** Languages whose content is shown; never empty. */
   languages: Lang[];
-  /** Wörter und Phrasen, deren Schlagzeilen ausgeblendet werden. */
+  /** Words and phrases whose headlines are hidden. */
   mutedWords: string[];
 }
 
-/** Version 1 zeigte acht Artikel pro Karte; ihre gespeicherte Anzahl wird nicht übernommen. */
+/** Version 1 showed eight articles per card; its stored count is not carried over. */
 const CONFIG_VERSION = 2;
 
 export interface DashboardConfig {
   version: typeof CONFIG_VERSION;
-  /** Die Reihenfolge im Array ist die Reihenfolge auf dem Dashboard. */
+  /** The order in the array is the order on the dashboard. */
   sources: Source[];
   settings: Settings;
 }
@@ -123,9 +123,9 @@ function normalizeSettings(input: unknown, legacy: boolean): Settings {
 }
 
 /**
- * Macht aus beliebigen (gespeicherten, importierten, geteilten) Daten eine gültige
- * Konfiguration. Ungültige Einträge werden verworfen, fehlende Katalogquellen hinten
- * angefügt. Wirft, wenn die Daten gar keine Konfiguration sind.
+ * Turns arbitrary (stored, imported, shared) data into a valid configuration.
+ * Invalid entries are dropped, missing catalog sources are appended at the end.
+ * Throws when the data is not a configuration at all.
  */
 export function normalizeConfig(input: unknown): DashboardConfig {
   if (typeof input !== 'object' || input === null || !Array.isArray((input as { sources?: unknown }).sources)) {
@@ -146,7 +146,7 @@ export function normalizeConfig(input: unknown): DashboardConfig {
 
     let source: Source;
     if (builtin) {
-      // Startquellen immer aus dem aktuellen Code nehmen, damit korrigierte Feed-URLs ankommen.
+      // Always take built-in sources from the current code, so corrected feed URLs arrive.
       source = fromCatalog(builtin, enabled);
     } else {
       if (!isHttpUrl(e.feedUrl)) continue;
@@ -167,24 +167,24 @@ export function normalizeConfig(input: unknown): DashboardConfig {
   }
 
   for (const d of DEFAULT_SOURCES) {
-    // Neu in den Katalog aufgenommene Quellen sind nur aktiv, wenn sie zur Startauswahl gehören.
+    // Sources newly added to the catalog are only active if they belong to the starter selection.
     if (!ids.has(d.id) && !feeds.has(d.feedUrl)) sources.push(fromCatalog(d, d.starter === true));
   }
 
   return { version: CONFIG_VERSION, sources, settings: normalizeSettings(raw.settings, raw.version !== CONFIG_VERSION) };
 }
 
-/** Eine Quelle ist sichtbar, wenn ihre Sprache gewählt ist. Eigene Quellen sind es immer. */
+/** A source is visible when its language is selected. Custom sources always are. */
 export function isVisible(source: Source, settings: Settings): boolean {
   return source.custom || !source.lang || settings.languages.includes(source.lang);
 }
 
-/** Alle Quellen, die bei der aktuellen Sprachwahl angeboten werden. */
+/** All sources offered for the current language selection. */
 export function visibleSources(config: DashboardConfig): Source[] {
   return config.sources.filter((s) => isVisible(s, config.settings));
 }
 
-/** Kompakte Form für Speicher, Export und Share-Link: Startquellen nur als id + Status. */
+/** Compact form for storage, export and share links: built-in sources only as id + status. */
 export function serializeConfig(config: DashboardConfig): unknown {
   return {
     version: CONFIG_VERSION,
@@ -202,7 +202,7 @@ export function loadConfig(): DashboardConfig {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) return normalizeConfig(JSON.parse(stored));
   } catch {
-    // kein oder defekter Speicher: mit Standard starten
+    // no storage or broken storage: start with the default
   }
   return defaultConfig();
 }
@@ -230,15 +230,15 @@ export function importConfig(text: string): DashboardConfig {
   return normalizeConfig(data);
 }
 
-// --- Links mit Layout: Share-Link und Homescreen-Link tragen das Layout im URL-Hash.
-// Der Hash wird nie an einen Server geschickt. Damit die Links in einen QR-Code passen, werden
-// sie knapp gehalten und komprimiert. ---
+// --- Links with a layout: share links and home screen links carry the layout in the URL hash.
+// The hash is never sent to a server. To make the links fit into a QR code, they are
+// kept short and compressed. ---
 
 const HASH_PREFIX = '#layout=';
 const INSTALL_PREFIX = '#install=';
-/** Kennzeichen des komprimierten Formats. Der Punkt kommt in base64url nicht vor. */
+/** Marker of the compressed format. The dot does not occur in base64url. */
 const PACKED = '1.';
-/** Obergrenze für entpackte Daten, damit ein präparierter Link den Browser nicht lahmlegt. */
+/** Upper limit for unpacked data, so a crafted link cannot freeze the browser. */
 const MAX_UNPACKED = 200_000;
 
 function toBase64Url(bytes: Uint8Array): string {
@@ -254,8 +254,8 @@ function fromBase64Url(value: string): Uint8Array {
 }
 
 /**
- * Das Layout ohne Überflüssiges: Abgewählte Katalogquellen fehlen, sofern sie nicht zur
- * Startauswahl gehören; `normalizeConfig` hängt sie beim Einlesen abgewählt wieder an.
+ * The layout without anything redundant: deselected catalog sources are left out unless they
+ * belong to the starter selection; `normalizeConfig` appends them again, deselected, when reading.
  */
 function compactLayout(config: DashboardConfig): unknown {
   const off = (s: Source) => (s.enabled ? {} : { enabled: false });
@@ -269,7 +269,7 @@ const pack = (data: unknown): string => PACKED + toBase64Url(deflateSync(strToU8
 
 function unpack(payload: string): unknown {
   if (!payload.startsWith(PACKED)) {
-    // Unkomprimierte Links aus der ersten Fassung.
+    // Uncompressed links from the first version.
     return JSON.parse(strFromU8(fromBase64Url(payload)));
   }
   const out = inflateSync(fromBase64Url(payload.slice(PACKED.length)), { out: new Uint8Array(MAX_UNPACKED) });
@@ -286,19 +286,19 @@ function decodeHash(prefix: string, hash: string): DashboardConfig | null {
   }
 }
 
-/** Link, der ein Layout überträgt; beim Öffnen fragt die Seite, ob es übernommen werden soll. */
+/** Link that transfers a layout; on opening, the page asks whether to apply it. */
 export const encodeShareHash = (config: DashboardConfig): string => HASH_PREFIX + pack(compactLayout(config));
 export const decodeShareHash = (hash: string): DashboardConfig | null => decodeHash(HASH_PREFIX, hash);
 
 /**
- * Homescreen-Link: Auf iOS hat eine App auf dem Homescreen einen eigenen, anfangs leeren Speicher.
- * Das Layout reist deshalb in der Adresse mit, unter der das Icon angelegt wird.
+ * Home screen link: on iOS an app on the home screen has its own storage, empty at first.
+ * The layout therefore travels in the address under which the icon is added.
  */
 export const encodeInstallHash = (config: DashboardConfig): string => INSTALL_PREFIX + pack(compactLayout(config));
 export const decodeInstallHash = (hash: string): DashboardConfig | null => decodeHash(INSTALL_PREFIX, hash);
 export const isInstallHash = (hash: string): boolean => hash.startsWith(INSTALL_PREFIX);
 
-/** true, wenn beide Layouts dasselbe Dashboard ergeben (Quellen, Reihenfolge, Darstellung). */
+/** true when both layouts produce the same dashboard (sources, order, display). */
 export const sameLayout = (a: DashboardConfig, b: DashboardConfig): boolean =>
   JSON.stringify(compactLayout(a)) === JSON.stringify(compactLayout(b));
 

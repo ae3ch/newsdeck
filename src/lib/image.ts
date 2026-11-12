@@ -1,15 +1,15 @@
 /**
- * Vorschaubilder werden über den Bilddienst wsrv.nl (images.weserv.nl) verkleinert geladen.
- * Die Verlage liefern Originale mit bis zu 1 MB; angezeigt werden sie briefmarkengross.
- * Über VITE_IMAGE_PROXY lässt sich ein anderer, kompatibler Dienst setzen; «off» schaltet ihn ab.
+ * Preview images load downscaled through the image service wsrv.nl (images.weserv.nl).
+ * Publishers deliver originals of up to 1 MB; they are displayed at thumbnail size.
+ * VITE_IMAGE_PROXY sets another compatible service; «off» turns it off.
  */
 const configured = (import.meta.env?.VITE_IMAGE_PROXY as string | undefined)?.trim();
 export const IMAGE_PROXY = configured === 'off' ? '' : configured || 'https://wsrv.nl/';
 
 /**
- * Adresse einer verkleinerten Fassung (WebP, zugeschnitten). `width`/`height` in CSS-Pixeln;
- * angefordert wird die doppelte Auflösung für scharfe Darstellung auf HiDPI-Bildschirmen.
- * Liefert null, wenn kein Bilddienst konfiguriert ist oder die Adresse nicht passt.
+ * Address of a downscaled version (WebP, cropped). `width`/`height` in CSS pixels;
+ * double the resolution is requested for sharp rendering on HiDPI screens.
+ * Returns null when no image service is configured or the address does not fit.
  */
 export function thumbUrl(src: string, width: number, height: number, proxy = IMAGE_PROXY): string | null {
   if (!proxy || !/^https?:\/\//i.test(src)) return null;
@@ -21,6 +21,6 @@ export function thumbUrl(src: string, width: number, height: number, proxy = IMA
     output: 'webp',
     q: '70',
   });
-  // «we»: kleine Originale nicht hochskalieren
+  // «we»: do not upscale small originals
   return `${proxy}?${q.toString()}&we`;
 }

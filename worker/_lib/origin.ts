@@ -1,8 +1,8 @@
 /**
- * Lässt nur Anfragen zu, die von der eigenen Seite kommen. Browser senden bei `fetch` den Header
- * `Sec-Fetch-Site`; ältere Browser ohne ihn müssen einen `Referer` derselben Herkunft mitschicken.
- * Das hält fremde Websites und gelegentliche Skripte ab, nicht aber gezielte Angreifer, die Header
- * fälschen. Gegen diese hilft nur eine Mengenbegrenzung (siehe worker/index.ts).
+ * Allows only requests that come from the own site. Browsers send the `Sec-Fetch-Site` header
+ * with `fetch`; older browsers without it must send a `Referer` from the same origin.
+ * That keeps out foreign websites and casual scripts, but not targeted attackers who forge
+ * headers. Only rate limiting helps against those (see worker/index.ts).
  */
 export function isSameOrigin(request: Request): boolean {
   const site = request.headers.get('Sec-Fetch-Site');

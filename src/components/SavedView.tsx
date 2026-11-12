@@ -17,7 +17,7 @@ interface Props {
 
 const dateFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
 
-/** Merkliste «Später lesen»: alle gemerkten Artikel, neueste zuerst. */
+/** «Read later» list: all saved articles, newest first. */
 export function SavedView({ saved, now, showImages, isRead, onRead, onToggle, onClear, onBack }: Props) {
   return (
     <div className="mx-auto max-w-3xl">

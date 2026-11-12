@@ -19,25 +19,25 @@ import { relativeTime } from '../src/lib/format';
 
 const custom = { id: 'c-abc', name: 'Mein Blog', siteUrl: 'https://blog.example', feedUrl: 'https://blog.example/feed', enabled: true };
 
-describe('Konfiguration', () => {
-  it('Startquellen haben eindeutige ids und Feed-URLs', () => {
+describe('configuration', () => {
+  it('built-in sources have unique ids and feed URLs', () => {
     expect(new Set(DEFAULT_SOURCES.map((s) => s.id)).size).toBe(DEFAULT_SOURCES.length);
     expect(new Set(DEFAULT_SOURCES.map((s) => s.feedUrl)).size).toBe(DEFAULT_SOURCES.length);
   });
 
-  it('behält Reihenfolge und Status, ergänzt fehlende Katalogquellen hinten', () => {
+  it('keeps order and status and appends missing catalog sources at the end', () => {
     const cfg = normalizeConfig({ sources: [{ id: 'golem', enabled: false }, custom, { id: 'heise' }] });
     expect(cfg.sources.slice(0, 3).map((s) => s.id)).toEqual(['golem', 'c-abc', 'heise']);
     expect(cfg.sources[0]).toMatchObject({ enabled: false, custom: false, name: 'Golem.de' });
     expect(cfg.sources[1]).toMatchObject({ custom: true, name: 'Mein Blog' });
     expect(cfg.sources).toHaveLength(DEFAULT_SOURCES.length + 1);
-    // nachgerückte Quellen: nur die Startauswahl ist aktiv
+    // appended sources: only the starter selection is active
     const added = new Map(cfg.sources.slice(3).map((s) => [s.id, s.enabled]));
     expect(added.get('techcrunch')).toBe(true);
     expect(added.get('krebs')).toBe(false);
   });
 
-  it('verwirft ungültige und doppelte Einträge', () => {
+  it('drops invalid and duplicate entries', () => {
     const cfg = normalizeConfig({
       version: 2,
       sources: [
@@ -49,7 +49,7 @@ describe('Konfiguration', () => {
         { id: 'heise' },
         null,
         'text',
-        { name: 'ohne feed' },
+        { name: 'no feed' },
       ],
       settings: { theme: 'rosa', articlesPerCard: 999, showTopStories: 'ja' },
     });
@@ -65,18 +65,18 @@ describe('Konfiguration', () => {
     });
   });
 
-  it('überschreibt Startquellen nicht mit fremden Feed-URLs', () => {
+  it('does not overwrite built-in sources with foreign feed URLs', () => {
     const cfg = normalizeConfig({ sources: [{ id: 'heise', feedUrl: 'https://evil.example/feed', name: 'Fake' }] });
     expect(cfg.sources[0].feedUrl).toBe(DEFAULT_SOURCES.find((s) => s.id === 'heise')!.feedUrl);
   });
 
-  it('lehnt Daten ohne Quellenliste ab', () => {
+  it('rejects data without a source list', () => {
     expect(() => normalizeConfig(null)).toThrow();
     expect(() => normalizeConfig({})).toThrow();
-    expect(() => importConfig('kein json')).toThrow();
+    expect(() => importConfig('not json')).toThrow();
   });
 
-  it('Export → Import und Share-Link sind verlustfrei', () => {
+  it('export → import and share links are lossless', () => {
     const cfg = normalizeConfig({
       version: 2,
       sources: [custom, { id: 'zdnet', enabled: false }, { id: 'heise' }],
@@ -90,14 +90,14 @@ describe('Konfiguration', () => {
     expect(decodeShareHash('#layout=%%%kaputt')).toBeNull();
   });
 
-  it('Layouts der Version 1 starten mit vier Artikeln pro Karte', () => {
+  it('version 1 layouts start with four articles per card', () => {
     const settings = { articlesPerCard: 8, theme: 'dark' };
     expect(normalizeConfig({ version: 1, sources: [], settings }).settings).toMatchObject({ articlesPerCard: 4, theme: 'dark' });
     expect(normalizeConfig({ sources: [], settings }).settings.articlesPerCard).toBe(4);
     expect(defaultConfig().settings.articlesPerCard).toBe(4);
   });
 
-  it('Homescreen-Link trägt Quellen, Reihenfolge und Darstellung', () => {
+  it('home screen link carries sources, order and display', () => {
     const cfg = normalizeConfig({
       version: 2,
       sources: [{ id: 'krebs' }, { ...custom, enabled: false }, { id: 'heise', enabled: false }, { id: 'golem' }],
@@ -107,7 +107,7 @@ describe('Konfiguration', () => {
     const back = decodeInstallHash(hash)!;
     expect(back.settings).toEqual(cfg.settings);
     expect(back.sources.slice(0, 4)).toEqual(cfg.sources.slice(0, 4));
-    // Abgewählte Katalogquellen reisen nicht mit, kommen aber abgewählt wieder an.
+    // Deselected catalog sources do not travel along, but arrive again deselected.
     expect(new Map(back.sources.map((s) => [s.id, s.enabled]))).toEqual(new Map(cfg.sources.map((s) => [s.id, s.enabled])));
     expect(sameLayout(back, cfg)).toBe(true);
 
@@ -119,8 +119,8 @@ describe('Konfiguration', () => {
     expect(decodeInstallHash('#install=%%%kaputt')).toBeNull();
   });
 
-  it('Links bleiben kurz genug für einen QR-Code', () => {
-    // Ein QR-Code fasst höchstens 2953 Zeichen; gut lesbar bleibt er deutlich darunter.
+  it('links stay short enough for a QR code', () => {
+    // A QR code holds at most 2953 characters; it stays easy to read well below that.
     const base = 'https://newsdeck.example.workers.dev/';
     expect((base + encodeShareHash(defaultConfig())).length).toBeLessThan(500);
     const customs = Array.from({ length: 10 }, (_, i) => ({
@@ -136,27 +136,27 @@ describe('Konfiguration', () => {
     expect(sameLayout(decodeShareHash(encodeShareHash(big))!, big)).toBe(true);
   });
 
-  it('liest unkomprimierte Links der ersten Fassung und weist übergrosse ab', () => {
+  it('reads uncompressed links from the first version and rejects oversized ones', () => {
     const b64url = (bytes: Uint8Array) =>
       btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     const legacy = (prefix: string, data: unknown) => prefix + b64url(new TextEncoder().encode(JSON.stringify(data)));
     const data = { version: 2, sources: [custom, { id: 'heise' }], settings: { theme: 'dark' } };
     expect(decodeShareHash(legacy('#layout=', data))!.sources[0].name).toBe('Mein Blog');
     expect(decodeInstallHash(legacy('#install=', data))!.settings.theme).toBe('dark');
-    // 1 MB Leerzeichen, komprimiert nur wenige hundert Byte: wird nicht entpackt.
+    // 1 MB of spaces, only a few hundred bytes compressed: is not unpacked.
     const bomb = '#layout=1.' + b64url(deflateSync(new Uint8Array(1_000_000).fill(32)));
     expect(bomb.length).toBeLessThan(5000);
     expect(decodeShareHash(bomb)).toBeNull();
   });
 
-  it('Katalog: jede Quelle gehört zu einer bekannten Kategorie, jede Kategorie hat Quellen', () => {
+  it('catalog: every source belongs to a known category, every category has sources', () => {
     const ids = new Set(CATEGORIES.map((c) => c.id));
     expect(DEFAULT_SOURCES.filter((s) => !ids.has(s.category))).toEqual([]);
     for (const c of CATEGORIES) expect(DEFAULT_SOURCES.some((s) => s.category === c.id)).toBe(true);
     expect(DEFAULT_SOURCES.every((s) => /^https:\/\//.test(s.feedUrl) && /^https:\/\//.test(s.siteUrl))).toBe(true);
   });
 
-  it('Sprachwahl: ungültige Angaben fallen auf beide Sprachen zurück, Reihenfolge ist fest', () => {
+  it('language selection: invalid values fall back to both languages, the order is fixed', () => {
     const lang = (languages: unknown) => normalizeConfig({ sources: [], settings: { languages } }).settings.languages;
     expect(lang(['en', 'de'])).toEqual(['de', 'en']);
     expect(lang(['en', 'en', 'fr'])).toEqual(['en']);
@@ -165,27 +165,27 @@ describe('Konfiguration', () => {
     expect(lang(undefined)).toEqual(['de', 'en']);
   });
 
-  it('Sprachwahl blendet Katalogquellen anderer Sprachen aus, eigene Quellen nie', () => {
+  it('language selection hides catalog sources in other languages, never custom sources', () => {
     const cfg = normalizeConfig({ sources: [custom], settings: { languages: ['de'] } });
     const shown = visibleSources(cfg);
     expect(shown.some((s) => s.id === 'heise')).toBe(true);
     expect(shown.some((s) => s.id === 'theverge')).toBe(false);
     expect(shown.some((s) => s.id === 'c-abc')).toBe(true);
     expect(shown.filter((s) => !s.custom).every((s) => s.lang === 'de')).toBe(true);
-    // ausgeblendet heisst nicht abgewählt: die Auswahl bleibt erhalten
+    // hidden does not mean deselected: the selection is kept
     expect(cfg.sources.find((s) => s.id === 'theverge')!.enabled).toBe(true);
     const en = visibleSources({ ...cfg, settings: { ...cfg.settings, languages: ['en'] } });
     expect(en.filter((s) => !s.custom).every((s) => s.lang === 'en')).toBe(true);
   });
 
-  it('jedes Thema hat in jeder Sprache höchstens die passenden Quellen', () => {
+  it('every topic has at most the matching sources in each language', () => {
     for (const lang of ['de', 'en'] as const) {
       const cfg = normalizeConfig({ sources: [], settings: { languages: [lang] } });
       expect(visibleSources(cfg).filter((s) => s.enabled).length).toBeGreaterThan(3);
     }
   });
 
-  it('Standardkonfiguration ist stabil und aktiviert nur die Startauswahl', () => {
+  it('the default configuration is stable and enables only the starter selection', () => {
     const cfg = defaultConfig();
     expect(cfg.sources.filter((s) => s.enabled).map((s) => s.id)).toEqual(
       DEFAULT_SOURCES.filter((s) => s.starter).map((s) => s.id),
@@ -194,13 +194,13 @@ describe('Konfiguration', () => {
   });
 });
 
-describe('Hilfsfunktionen', () => {
-  it('teilt in Pakete', () => {
+describe('helpers', () => {
+  it('splits into batches', () => {
     expect(chunk([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]]);
     expect(chunk([], 15)).toEqual([]);
   });
 
-  it('behält alte Artikel, wenn ein Feed vorübergehend ausfällt', () => {
+  it('keeps old articles when a feed fails temporarily', () => {
     const article = { title: 't', link: 'https://e.com/1', pubDate: null, description: '' };
     const prev = { a: { feedUrl: 'a', articles: [article] } };
     const next = mergeFeeds(prev, [
@@ -212,7 +212,7 @@ describe('Hilfsfunktionen', () => {
     expect(mergeFeeds(next, [{ feedUrl: 'a', articles: [article] }]).a.error).toBeUndefined();
   });
 
-  it('behält den Stand, wenn der Server «unverändert» meldet', () => {
+  it('keeps the state when the server reports «unchanged»', () => {
     const article = { title: 't', link: 'https://e.com/1', pubDate: null, description: '' };
     const prev = {
       a: { feedUrl: 'a', articles: [article], version: 'v1' },
@@ -229,7 +229,7 @@ describe('Hilfsfunktionen', () => {
     expect(next.c).toBeUndefined();
   });
 
-  it('formatiert relative Zeiten', () => {
+  it('formats relative times', () => {
     const now = Date.parse('2026-11-11T12:00:00Z');
     expect(relativeTime('2026-11-11T11:59:30Z', now)).toBe('just now');
     expect(relativeTime('2026-11-11T11:40:00Z', now)).toBe('20 min ago');

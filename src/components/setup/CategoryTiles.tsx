@@ -8,7 +8,7 @@ interface Props {
   onSetMany: (ids: string[], enabled: boolean) => void;
 }
 
-/** Themen als grosse Schalter: Ein Klick aktiviert oder deaktiviert alle Quellen des Themas. */
+/** Topics as large toggles: one click enables or disables all sources of the topic. */
 export function CategoryTiles({ sources, onSetMany }: Props) {
   return (
     <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

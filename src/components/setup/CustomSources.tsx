@@ -10,15 +10,15 @@ interface Props {
   onAdd: (source: NewSource) => void;
   onToggle: (id: string) => void;
   onRemove: (id: string) => void;
-  /** Feed-Adressen, die seit über einem Tag nicht laden. */
+  /** Feed addresses that have not loaded for over a day. */
   brokenFeeds?: Set<string>;
-  /** Mit Angabe erscheinen Import und Export als OPML (nur auf der Anpassen-Seite). */
+  /** When set, OPML import and export appear (only on the customize page). */
   opml?: { config: DashboardConfig; onReplace: (config: DashboardConfig) => void };
 }
 
 const MAX_OPML_BYTES = 500_000;
 
-/** OPML-Import und -Export; der Parser wird erst beim ersten Gebrauch geladen. */
+/** OPML import and export; the parser loads only on first use. */
 function OpmlTools({ config, onReplace }: NonNullable<Props['opml']>) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -87,7 +87,7 @@ function OpmlTools({ config, onReplace }: NonNullable<Props['opml']>) {
   );
 }
 
-/** Eigene Newsseiten hinzufügen und verwalten. */
+/** Add and manage custom news sites. */
 export function CustomSources({ sources, onAdd, onToggle, onRemove, brokenFeeds, opml }: Props) {
   const custom = sources.filter((s) => s.custom);
   return (

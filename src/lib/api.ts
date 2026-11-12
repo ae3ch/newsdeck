@@ -9,7 +9,7 @@ import {
 
 const REQUEST_TIMEOUT = 25_000;
 
-/** Fehler einer API-Anfrage mit HTTP-Status (0 = keine Antwort). */
+/** Error of an API request with its HTTP status (0 = no response). */
 export class ApiError extends Error {
   constructor(readonly status: number) {
     super(status ? `HTTP ${status}` : 'Network error');
@@ -39,13 +39,13 @@ export function chunk<T>(items: T[], size: number): T[][] {
 
 export interface FeedsFetchResult {
   feeds: FeedResult[];
-  /** true, wenn mindestens eine Teilanfrage fehlgeschlagen ist. */
+  /** true when at least one partial request failed. */
   partial: boolean;
 }
 
 /**
- * Holt alle Feeds in Paketen. `versions` nennt je Feed die im Browser vorhandene Version;
- * unveränderte Feeds kommen dann ohne Artikel zurück. Wirft nur, wenn keine Teilanfrage gelingt.
+ * Fetches all feeds in batches. `versions` names, per feed, the version the browser already has;
+ * unchanged feeds then come back without articles. Throws only when no partial request succeeds.
  */
 export async function fetchFeeds(
   urls: string[],
@@ -76,7 +76,7 @@ export async function discoverFeeds(url: string, signal?: AbortSignal): Promise<
   return getJson<DiscoverResponse>(`/api/discover?url=${encodeURIComponent(url)}`, signal);
 }
 
-/** Holt die Vorschaubilder (og:image) für bis zu MAX_OG_PER_REQUEST Artikel. */
+/** Fetches the preview images (og:image) for up to MAX_OG_PER_REQUEST articles. */
 export async function fetchOgImages(urls: string[], signal?: AbortSignal): Promise<Record<string, string | null>> {
   const qs = urls.slice(0, MAX_OG_PER_REQUEST).map((u) => `u=${encodeURIComponent(u)}`).join('&');
   const res = await getJson<OgResponse>(`/api/og?${qs}`, signal);

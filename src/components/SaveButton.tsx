@@ -5,11 +5,11 @@ interface Props {
   title: string;
   onToggle: () => void;
   className?: string;
-  /** Eigene Farbklassen statt der Standardfarben (z. B. für den Knopf auf einem Bild). */
+  /** Custom color classes instead of the default colors (e.g. for the button on an image). */
   tone?: string;
 }
 
-/** Lesezeichen-Knopf neben einer Schlagzeile: merkt den Artikel für später oder entfernt ihn. */
+/** Bookmark button next to a headline: saves the article for later or removes it. */
 export function SaveButton({ saved, title, onToggle, className = '', tone }: Props) {
   return (
     <button

@@ -1,13 +1,13 @@
 import { useSyncExternalStore } from 'react';
 
-/** iPhone und iPad, auch wenn sich das iPad als Mac ausgibt. Gilt für alle Browser dort. */
+/** iPhone and iPad, even when the iPad identifies as a Mac. Applies to all browsers there. */
 export function isIos(): boolean {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
 
 export const isAndroid = (): boolean => /Android/i.test(navigator.userAgent);
 
-/** true, wenn die Seite als App vom Homescreen läuft und nicht in einem Browser-Tab. */
+/** true when the page runs as an app from the home screen and not in a browser tab. */
 export function isStandalone(): boolean {
   return (
     window.matchMedia('(display-mode: standalone)').matches ||
@@ -16,8 +16,8 @@ export function isStandalone(): boolean {
 }
 
 /**
- * Bindet das Web-App-Manifest ein, ausser auf iOS: Dort würde dessen `start_url` die Adresse
- * ersetzen, unter der das Icon angelegt wird, und mit ihr das Layout im Homescreen-Link.
+ * Adds the web app manifest, except on iOS: there its `start_url` would replace the address
+ * under which the icon is added, and with it the layout in the home screen link.
  */
 export function attachManifest(): void {
   if (isIos()) return;
@@ -27,16 +27,16 @@ export function attachManifest(): void {
   document.head.append(link);
 }
 
-/** Meldet den Service Worker an, der die App ohne Netz starten lässt (siehe src/sw.js). Nur im Build. */
+/** Registers the service worker that lets the app start offline (see src/sw.js). Production build only. */
 export function registerServiceWorker(): void {
   if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
   window.addEventListener('load', () => {
-    // Ohne Service Worker läuft alles wie bisher, nur eben nicht ohne Netz.
+    // Without a service worker everything works as before, just not offline.
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   });
 }
 
-// --- Installationsdialog des Browsers (Chrome, Edge, Samsung Internet) ---
+// --- The browser's install dialog (Chrome, Edge, Samsung Internet) ---
 
 interface InstallPromptEvent extends Event {
   prompt: () => Promise<unknown>;
@@ -49,7 +49,7 @@ const setPromptEvent = (e: InstallPromptEvent | null) => {
   listeners.forEach((notify) => notify());
 };
 
-// Der Browser meldet das Ereignis kurz nach dem Laden, also schon hier mithören.
+// The browser fires the event shortly after loading, so start listening here already.
 window.addEventListener('beforeinstallprompt', (e) => setPromptEvent(e as InstallPromptEvent));
 window.addEventListener('appinstalled', () => setPromptEvent(null));
 
@@ -58,12 +58,12 @@ const subscribe = (notify: () => void) => {
   return () => listeners.delete(notify);
 };
 
-/** Funktion, die den Installationsdialog öffnet, oder null, wenn der Browser keinen anbietet. */
+/** Function that opens the install dialog, or null when the browser offers none. */
 export function useInstallPrompt(): (() => void) | null {
   const event = useSyncExternalStore(subscribe, () => promptEvent);
   if (!event) return null;
   return () => {
-    // Das Ereignis lässt sich nur einmal verwenden.
+    // The event can only be used once.
     setPromptEvent(null);
     void event.prompt();
   };

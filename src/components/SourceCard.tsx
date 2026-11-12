@@ -11,13 +11,13 @@ import { kicker } from './ui';
 
 interface Props {
   source: Source;
-  /** undefined = noch nicht geladen. */
+  /** undefined = not loaded yet. */
   articles: Article[] | undefined;
   error?: string;
   limit: number;
-  /** Zusätzlich zu `limit` eingeblendete Artikel. */
+  /** Articles shown in addition to `limit`. */
   extra: number;
-  /** Blendet eine weitere Portion von `step` Artikeln ein. */
+  /** Shows another batch of `step` articles. */
   onMore: (sourceId: string, step: number) => void;
   onLess: (sourceId: string) => void;
   isRead: (link: string) => boolean;
@@ -27,7 +27,7 @@ interface Props {
   now: number;
   filtered: boolean;
   showImages: boolean;
-  /** Attribute und Listener für den Ziehgriff (von dnd-kit). */
+  /** Attributes and listeners for the drag handle (from dnd-kit). */
   handleProps?: HTMLAttributes<HTMLButtonElement>;
 }
 
@@ -74,7 +74,7 @@ export const SourceCard = memo(function SourceCard(p: Props) {
 
   const collapse = () => {
     p.onLess(p.source.id);
-    // Nach dem Einklappen läge der Kartenanfang oft weit über dem Bildausschnitt: zurückholen.
+    // After collapsing, the top of the card would often be far above the viewport: bring it back.
     requestAnimationFrame(() => {
       const el = card.current;
       if (el && el.getBoundingClientRect().top < 72) el.scrollIntoView({ block: 'start' });
@@ -156,7 +156,7 @@ export const SourceCard = memo(function SourceCard(p: Props) {
                   )}
                 </span>
               </a>
-              {/* Mit Maus erst beim Überfahren sichtbar, auf Touch-Geräten immer. */}
+              {/* With a mouse visible only on hover, always on touch devices. */}
               <SaveButton
                 saved={p.isSaved(a.link)}
                 title={a.title}

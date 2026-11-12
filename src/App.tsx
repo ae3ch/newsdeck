@@ -40,8 +40,8 @@ import { makeMuteMatcher } from './lib/mute';
 import { topicOf, topicsOf } from './lib/topics';
 import { rankTopStories, type Story } from './lib/topStories';
 
-// Seltener gebrauchte Ansichten werden erst bei Bedarf geladen; das hält die erste Ladung klein.
-// Der Service Worker speichert sie trotzdem vorab, damit sie auch ohne Netz öffnen.
+// Less frequently used views load only when needed; that keeps the first load small.
+// The service worker still caches them up front, so they open offline too.
 const CustomizeView = lazy(() => import('./components/setup/CustomizeView').then((m) => ({ default: m.CustomizeView })));
 const Onboarding = lazy(() => import('./components/setup/Onboarding').then((m) => ({ default: m.Onboarding })));
 const InstallView = lazy(() => import('./components/setup/InstallView').then((m) => ({ default: m.InstallView })));
@@ -49,11 +49,11 @@ const LegalView = lazy(() => import('./components/legal/LegalView').then((m) => 
 const SavedView = lazy(() => import('./components/SavedView').then((m) => ({ default: m.SavedView })));
 
 const TOP_STORY_COUNT = 6;
-/** Ab dieser Breite stehen die Karten in mehreren Spalten (md); dort zeigt jede Karte mehr Artikel. */
+/** From this width on, cards sit in several columns (md); there each card shows more articles. */
 const WIDE_SCREEN = '(min-width: 48rem)';
 const WIDE_EXTRA_ARTICLES = 2;
 const TOP_STORY_AGE_STEP = 5 * 60_000;
-/** Obergrenze für Bild-Nachfragen pro Durchlauf (sichtbare Artikel zuerst). */
+/** Upper limit of image lookups per pass (visible articles first). */
 const MAX_OG_LOOKUPS = 240;
 
 function moveItem<T>(list: T[], from: number, to: number): T[] {
@@ -67,8 +67,8 @@ function moveItem<T>(list: T[], from: number, to: number): T[] {
 const THEME_COLOR = { light: '#f5f4f0', dark: '#0c0d0f' };
 
 /**
- * Start über einen Homescreen-Link auf einem Gerät ohne gespeichertes Layout (neues Gerät oder
- * die frisch angelegte App auf iOS): Das Layout aus der Adresse gilt sofort, ohne Rückfrage.
+ * Launch from a home screen link on a device without a stored layout (a new device or the
+ * freshly added app on iOS): the layout from the address applies at once, without asking.
  */
 const adoptedAtStart = (() => {
   const linked = hasStoredConfig() ? null : decodeInstallHash(window.location.hash);
@@ -78,9 +78,9 @@ const adoptedAtStart = (() => {
 })();
 
 /**
- * Layout aus der Adresse, das auf eine Entscheidung wartet: ein Share-Link oder ein
- * Homescreen-Link, der vom eigenen Layout abweicht. In der App vom Homescreen bleibt deren
- * Startadresse für immer dieselbe und wird nach der ersten Übernahme nicht mehr beachtet.
+ * Layout from the address that awaits a decision: a share link, or a home screen link that
+ * differs from the own layout. In the app from the home screen, its start address stays the
+ * same forever and is ignored after it was first applied.
  */
 function linkedLayout(hash: string, current: DashboardConfig): DashboardConfig | null {
   const share = decodeShareHash(hash);
@@ -90,7 +90,7 @@ function linkedLayout(hash: string, current: DashboardConfig): DashboardConfig |
 }
 
 type View = 'dashboard' | 'customize' | 'onboarding' | 'install' | 'saved' | LegalDoc;
-/** Feste Adressen der Ansichten. Die Homescreen-Seite fehlt hier: Ihr Hash enthält das Layout. */
+/** Fixed addresses of the views. The home screen page is missing here: its hash holds the layout. */
 const VIEW_HASH: Record<Exclude<View, 'dashboard' | 'install'>, string> = {
   customize: '#customize',
   onboarding: '#setup',
@@ -105,7 +105,7 @@ const viewFromHash = (hash: string): View => {
   return (Object.keys(VIEW_HASH) as (keyof typeof VIEW_HASH)[]).find((v) => VIEW_HASH[v] === hash) ?? 'dashboard';
 };
 
-/** Aktuelle Ansicht, an den URL-Hash gekoppelt, damit Zurück-Taste und Lesezeichen funktionieren. */
+/** Current view, tied to the URL hash so the back button and bookmarks work. */
 function useView(): [View, (view: View, hash?: string) => void] {
   const [view, setView] = useState<View>(() => viewFromHash(window.location.hash));
   useEffect(() => {
@@ -145,14 +145,14 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [view, navigate] = useView();
   const [shared, setShared] = useState<DashboardConfig | null>(() => linkedLayout(window.location.hash, config));
-  // Der Hinweis auf die Übernahme gilt nur, solange die Seite aus dem Link offen ist.
+  // The notice about the applied layout only holds while the page from the link is open.
   const [adopted, setAdopted] = useState(adoptedAtStart);
   useEffect(() => {
     if (view !== 'install') setAdopted(false);
   }, [view]);
   const now = useNow();
 
-  // Fremder Link in der Adresszeile eines offenen Tabs oder Vor/Zurück: neu prüfen.
+  // Foreign link in the address bar of an open tab, or back/forward: check again.
   const configRef = useRef(config);
   useEffect(() => {
     configRef.current = config;
@@ -163,7 +163,7 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
-  // Die Adresse der Homescreen-Seite folgt dem Layout, solange kein fremdes zur Wahl steht.
+  // The address of the home screen page follows the layout, as long as no foreign one is up for choice.
   useEffect(() => {
     if (view !== 'install' || shared) return;
     const hash = encodeInstallHash(config);
@@ -172,7 +172,7 @@ export default function App() {
     }
   }, [view, shared, config]);
 
-  // Speichern bei jeder Änderung; Änderungen aus anderen Tabs übernehmen.
+  // Save on every change; pick up changes from other tabs.
   useEffect(() => {
     saveConfig(config);
   }, [config]);
@@ -191,7 +191,7 @@ export default function App() {
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', isDark ? THEME_COLOR.dark : THEME_COLOR.light);
   }, [isDark]);
 
-  // Aktiv = angehakt und in einer gewählten Sprache.
+  // Active = checked and in a selected language.
   const enabled = useMemo(
     () => config.sources.filter((s) => s.enabled && isVisible(s, config.settings)),
     [config.sources, config.settings],
@@ -201,7 +201,7 @@ export default function App() {
 
   const needle = query.trim().toLowerCase();
   const { showImages, showTopStories } = config.settings;
-  // Die Einstellung gilt für das Handy; auf breiteren Bildschirmen zwei Artikel mehr (Standard: 4 bzw. 6).
+  // The setting applies to phones; wider screens show two more articles (default: 4 and 6).
   const wide = useMediaQuery(WIDE_SCREEN);
   const articlesPerCard = config.settings.articlesPerCard + (wide ? WIDE_EXTRA_ARTICLES : 0);
   const { isRead, markRead } = useReadLinks();
@@ -212,7 +212,7 @@ export default function App() {
     [toggleSaved],
   );
 
-  // Stichwortfilter: Schlagzeilen mit ausgeblendeten Wörtern erscheinen nirgends.
+  // Keyword filter: headlines with muted words appear nowhere.
   const mutedWords = config.settings.mutedWords;
   const isMuted = useMemo(() => makeMuteMatcher(mutedWords), [mutedWords]);
   const visibleArticles = useCallback(
@@ -224,23 +224,23 @@ export default function App() {
     return enabled.reduce((n, s) => n + (feeds[s.feedUrl]?.articles.filter((a) => isMuted(a.title)).length ?? 0), 0);
   }, [enabled, feeds, isMuted]);
 
-  // Quellen, die seit über einem Tag nicht laden (für den Hinweis unter «Customize»).
+  // Sources that have not loaded for over a day (for the notice under «Customize»).
   const broken = useMemo<BrokenSource[]>(() => {
     const failing = brokenFeeds(health, now);
     return enabled.filter((s) => failing[s.feedUrl]).map((s) => ({ source: s, ...failing[s.feedUrl] }));
   }, [enabled, health, now]);
 
-  // Themen-Filter: gilt für diese Sitzung. Gibt es das gewählte Thema nicht mehr, sind es wieder alle.
+  // Topic filter: applies to this session. If the selected topic no longer exists, all are shown again.
   const topics = useMemo(() => topicsOf(enabled), [enabled]);
   const [pickedTopic, setTopic] = useState<string | null>(null);
   const topic = topics.some((t) => t.id === pickedTopic) ? pickedTopic : null;
 
-  // Je Quelle die Zahl der über «mehr» zusätzlich eingeblendeten Artikel.
+  // Per source, the number of articles shown in addition via «more».
   const [expanded, setExpanded] = useState<Record<string, number>>({});
   const onMore = useCallback((id: string, step: number) => setExpanded((e) => ({ ...e, [id]: (e[id] ?? 0) + step })), []);
   const onLess = useCallback((id: string) => setExpanded((e) => ({ ...e, [id]: 0 })), []);
 
-  // Schritt 1: Was auf den Karten steht (Thema, Suche), noch ohne nachgeladene Bilder.
+  // Step 1: what the cards show (topic, search), still without lazily loaded images.
   const rawItems = useMemo<GridItem[]>(() => {
     const out: GridItem[] = [];
     for (const source of enabled) {
@@ -258,9 +258,9 @@ export default function App() {
     return out;
   }, [enabled, feeds, needle, topic, visibleArticles]);
 
-  // Artikel ohne Bild im Feed: Vorschaubild (og:image) der Artikelseite nachladen, aber nur für
-  // das, was zu sehen ist: die Top-Meldungen und je Karte die eingeblendeten Artikel. Reihum pro
-  // Quelle, damit die oben sichtbaren zuerst an der Reihe sind.
+  // Articles without an image in the feed: load the preview image (og:image) of the article page, but
+  // only for what is visible: the top stories and the shown articles of each card. Round-robin per
+  // source, so the ones visible at the top come first.
   const [storyLinks, setStoryLinks] = useState<string[]>([]);
   const missingImages = useMemo(() => {
     const out = new Set(storyLinks);
@@ -277,7 +277,7 @@ export default function App() {
   }, [rawItems, storyLinks, showImages, articlesPerCard, expanded]);
   const ogImages = useOgImages(missingImages, true);
 
-  // Schritt 2: nachgeladene Bilder einsetzen.
+  // Step 2: insert the lazily loaded images.
   const withImage = useCallback(
     (a: Article): Article => (!a.image && ogImages[a.link] ? { ...a, image: ogImages[a.link] } : a),
     [ogImages],
@@ -287,10 +287,10 @@ export default function App() {
     [rawItems, withImage],
   );
 
-  // Alle fünf Minuten neu bewerten, auch ohne frische Daten: So fällt eine Meldung
-  // verlässlich heraus, sobald sie älter als 24 Stunden ist.
+  // Re-rank every five minutes, even without fresh data: that way a story reliably
+  // drops out as soon as it is older than 24 hours.
   const ageTick = Math.ceil(now / TOP_STORY_AGE_STEP);
-  // Die Top-Meldungen kommen aus allen aktiven Quellen, unabhängig vom Themen-Filter.
+  // Top stories come from all active sources, regardless of the topic filter.
   const stories = useMemo<Story[]>(() => {
     if (!showTopStories || needle) return [];
     const all = enabled.map((source) => ({
@@ -299,7 +299,7 @@ export default function App() {
     }));
     return rankTopStories(all, ageTick * TOP_STORY_AGE_STEP, TOP_STORY_COUNT);
   }, [enabled, feeds, withImage, visibleArticles, showTopStories, needle, ageTick]);
-  // Welche Top-Meldungen noch kein Bild haben, steht erst nach der Auswahl fest.
+  // Which top stories still lack an image is only known after the selection.
   const storiesWithoutImage = stories
     .filter((s) => !s.article.image)
     .map((s) => s.article.link)
@@ -325,7 +325,7 @@ export default function App() {
       ),
     [updateSources],
   );
-  // Verschiebt innerhalb der aktiven Quellen; abgewählte und ausgeblendete dazwischen werden übersprungen.
+  // Moves within the active sources; deselected and hidden ones in between are skipped.
   const onShift = useCallback(
     (id: string, delta: -1 | 1) =>
       setConfig((c) => {
@@ -373,7 +373,7 @@ export default function App() {
     [],
   );
 
-  // Die geführte Einrichtung ist freiwillig und öffnet sich nur auf Wunsch.
+  // The guided setup is optional and opens only on request.
   const startOnboarding = () => navigate('onboarding');
   const actions: SetupActions = {
     onToggle,
@@ -387,7 +387,7 @@ export default function App() {
     onReset: () => setConfig(defaultConfig()),
   };
 
-  // Auf der Homescreen-Seite bleibt der Hash stehen; er wird dort an das gültige Layout angeglichen.
+  // On the home screen page the hash stays; there it is aligned with the valid layout.
   const settleShared = () => {
     if (view !== 'install') history.replaceState(null, '', window.location.pathname + window.location.search);
     setShared(null);

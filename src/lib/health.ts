@@ -1,14 +1,14 @@
 export const HEALTH_KEY = 'tech-news:health';
-/** Ab dieser Dauer ununterbrochener Fehler gilt eine Quelle als defekt. */
+/** After this long without a single success, a source counts as broken. */
 export const BROKEN_AFTER = 24 * 3600_000;
 
-/** Je Feed-Adresse: seit wann der Abruf ununterbrochen fehlschlägt, und der letzte Fehler. */
+/** Per feed address: since when fetching has failed without interruption, and the last error. */
 export type Health = Record<string, { since: number; error: string }>;
 
 /**
- * Schreibt die Fehlerserien mit den Ergebnissen eines Abrufs fort. Ein Fehler beginnt eine Serie
- * oder setzt sie fort, ein Erfolg (auch «unverändert») beendet sie. Feeds, die in diesem Abruf
- * fehlen (etwa weil die ganze Anfrage scheiterte), bleiben unberührt.
+ * Updates the failure streaks with the results of one fetch. An error starts a streak or
+ * continues it, a success (including «unchanged») ends it. Feeds missing from this fetch
+ * (for example because the whole request failed) stay untouched.
  */
 export function updateHealth(prev: Health, results: { feedUrl: string; error?: string }[], now: number): Health {
   let next = prev;
@@ -26,7 +26,7 @@ export function updateHealth(prev: Health, results: { feedUrl: string; error?: s
   return next;
 }
 
-/** Nur Einträge der angegebenen Feeds behalten. */
+/** Keep only entries of the given feeds. */
 export function pruneHealth(health: Health, feedUrls: string[]): Health {
   const keep = new Set(feedUrls);
   const out: Health = {};
@@ -34,7 +34,7 @@ export function pruneHealth(health: Health, feedUrls: string[]): Health {
   return out;
 }
 
-/** Feeds, die seit mindestens `after` ms ununterbrochen nicht laden. */
+/** Feeds that have failed to load without interruption for at least `after` ms. */
 export function brokenFeeds(health: Health, now: number, after = BROKEN_AFTER): Health {
   const out: Health = {};
   for (const [url, entry] of Object.entries(health)) if (now - entry.since >= after) out[url] = entry;

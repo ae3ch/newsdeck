@@ -8,14 +8,14 @@ interface Props {
   onChange: (words: string[]) => void;
 }
 
-/** Wörter und Phrasen, deren Schlagzeilen ausgeblendet werden. */
+/** Words and phrases whose headlines are hidden. */
 export function MutedWords({ words, onChange }: Props) {
   const [input, setInput] = useState('');
   const full = words.length >= MAX_MUTED;
 
   const add = (e: FormEvent) => {
     e.preventDefault();
-    // Mehrere auf einmal, durch Komma getrennt.
+    // Several at once, separated by commas.
     const next = cleanMutedWords([...words, ...input.split(',')]);
     if (next.length !== words.length) onChange(next);
     setInput('');

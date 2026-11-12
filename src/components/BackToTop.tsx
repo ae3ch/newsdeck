@@ -3,7 +3,7 @@ import { ArrowUpIcon } from './icons';
 
 const SHOW_AFTER = 600;
 
-/** Schaltfläche unten rechts, die nach dem Herunterscrollen erscheint und zum Seitenanfang führt. */
+/** Button at the bottom right that appears after scrolling down and leads back to the top. */
 export function BackToTop() {
   const [visible, setVisible] = useState(false);
 

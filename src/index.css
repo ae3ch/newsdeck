@@ -3,9 +3,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Geist und Geist Mono liegen als Dateien im Projekt (src/assets/fonts, Lizenz: OFL.txt):
- * keine Anfragen an Dritte, kein Paket. Nur Latein und Latein erweitert (Englisch, Deutsch);
- * der Browser lädt eine Datei erst, wenn ein Zeichen aus ihrem Bereich vorkommt.
+ * Geist and Geist Mono ship as files in the project (src/assets/fonts, license: OFL.txt):
+ * no third-party requests, no package. Only Latin and Latin Extended (English, German);
+ * the browser loads a file only when a character from its range appears.
  */
 @font-face {
   font-family: 'Geist';
@@ -45,8 +45,8 @@
 }
 
 /*
- * Farben als semantische Tokens. Akzent wie bisher; Text erreicht in beiden Schemata mindestens 4.5:1,
- * Feldränder (--field) mindestens 3:1 gegen Fläche und Hintergrund.
+ * Colors as semantic tokens. Accent as before; text reaches at least 4.5:1 in both schemes,
+ * field borders (--field) at least 3:1 against surface and background.
  */
 :root {
   --bg: #f5f4f0;
@@ -58,7 +58,7 @@
   --muted: #5c5850;
   --accent: #b93a0a;
   --accent-ink: #ffffff;
-  /* Akzent auf dunklem Bildschleier, in beiden Schemata gleich. */
+  /* Accent on a dark image scrim, the same in both schemes. */
   --accent-bright: #ff8a4c;
   --danger: #b42318;
   color-scheme: light;
@@ -110,7 +110,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Tailwind 4 setzt keinen Zeiger mehr auf Schaltflächen; alles Anklickbare soll sich so anfühlen. */
+/* Tailwind 4 no longer sets a pointer cursor on buttons; everything clickable should feel that way. */
 button:not(:disabled),
 [role='button'],
 summary,
@@ -119,7 +119,7 @@ select:not(:disabled) {
   cursor: pointer;
 }
 
-/* Schlagzeilen umbrechen ausgewogen, Fließtext ohne einzelnes Wort in der letzten Zeile. */
+/* Headlines wrap balanced, body text without a single word on the last line. */
 h1,
 h2,
 h3,
@@ -130,7 +130,7 @@ p {
   text-wrap: pretty;
 }
 
-/* Seitenränder, die bei viewport-fit=cover Notch und abgerundete Ecken freihalten. */
+/* Page margins that keep the notch and rounded corners clear with viewport-fit=cover. */
 .page-x {
   padding-left: max(1rem, env(safe-area-inset-left));
   padding-right: max(1rem, env(safe-area-inset-right));
@@ -150,14 +150,14 @@ p {
   }
 }
 
-/* iOS zoomt in die Seite, sobald ein Feld mit weniger als 16px Schrift den Fokus erhält. */
+/* iOS zooms into the page as soon as a field with a font size below 16px receives focus. */
 @media (pointer: coarse) {
   input:not([type='checkbox'], [type='radio'], [type='range'], [type='file']) {
     font-size: 1rem;
   }
 }
 
-/* In der Basisebene, damit einzelne Elemente den Ring mit einer Utility-Klasse ersetzen können. */
+/* In the base layer, so single elements can replace the ring with a utility class. */
 @layer base {
   :focus-visible {
     outline: 2px solid var(--accent);
@@ -165,13 +165,13 @@ p {
     border-radius: 4px;
   }
 
-  /* Überschriften, die nur für Screenreader den Fokus erhalten, brauchen keinen Rahmen. */
+  /* Headings that receive focus only for screen readers need no outline. */
   [tabindex='-1']:focus-visible {
     outline: none;
   }
 }
 
-/* Feste Kopfleiste: fokussierte Elemente dürfen nicht unter ihr verschwinden. */
+/* Fixed header: focused elements must not disappear beneath it. */
 html {
   scroll-padding-top: 5rem;
 }

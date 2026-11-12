@@ -1,4 +1,4 @@
-/** Findet Feed-Verweise (<link rel="alternate" …>) in einer HTML-Seite. */
+/** Finds feed links (<link rel="alternate" …>) in an HTML page. */
 export function findFeedLinks(html: string, pageUrl: string): string[] {
   const out: string[] = [];
   const head = html.slice(0, 300_000);
@@ -19,11 +19,11 @@ export function findFeedLinks(html: string, pageUrl: string): string[] {
       const url = new URL(href, pageUrl);
       if (url.protocol !== 'http:' && url.protocol !== 'https:') continue;
       const s = url.toString();
-      // Kommentar-Feeds sind fast nie gemeint.
+      // Comment feeds are almost never what is meant.
       if (/\/comments\/feed|[?&]feed=comments/i.test(s)) continue;
       if (!out.includes(s)) out.push(s);
     } catch {
-      // ungültiger Verweis
+      // invalid link
     }
   }
   return out;

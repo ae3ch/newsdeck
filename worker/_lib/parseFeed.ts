@@ -4,8 +4,8 @@ import type { Article, ParsedFeed } from '../../shared/types';
 export const MAX_ARTICLES = 10;
 const MAX_DESCRIPTION = 300;
 
-// Entities werden bewusst nicht vom XML-Parser aufgelöst (Schutz vor
-// Entity-Expansion); der Text wird unten selbst dekodiert.
+// The XML parser deliberately does not resolve entities (protection against
+// entity expansion); the text is decoded below instead.
 const parser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: '@_',
@@ -26,7 +26,7 @@ function asArray(n: Node): Node[] {
   return Array.isArray(n) ? n : [n];
 }
 
-/** Sammelt den Textinhalt eines Knotens (inkl. verschachtelter Elemente, z. B. XHTML in Atom). */
+/** Collects the text content of a node (including nested elements, e.g. XHTML in Atom). */
 function flatText(n: Node, depth = 0): string {
   if (n === undefined || n === null || depth > 8) return '';
   if (typeof n === 'string') return n;
@@ -77,9 +77,9 @@ function stripHtml(s: string): string {
 
 const collapse = (s: string) => s.replace(/\s+/g, ' ').trim();
 
-/** Feed-Inhalt (HTML, einfach oder doppelt maskiert) zu reinem Text. */
+/** Feed content (HTML, escaped once or twice) to plain text. */
 export function toPlainText(raw: string): string {
-  // Tags werden zu Leerzeichen; Leerzeichen vor Satzzeichen danach wieder entfernen.
+  // Tags become spaces; then remove spaces before punctuation again.
   return collapse(decodeEntities(stripHtml(decodeEntities(raw)))).replace(/ ([.,;:!?])(?= |$)/g, '$1');
 }
 
@@ -116,7 +116,7 @@ function toIsoDate(raw: string): string | null {
   return Number.isNaN(t) ? null : new Date(t).toISOString();
 }
 
-// Zählpixel und Platzhalter, die Feeds als «Bild» ausgeben (z. B. cpx.golem.de/cpx.php).
+// Tracking pixels and placeholders that feeds output as an «image» (e.g. cpx.golem.de/cpx.php).
 const BAD_IMAGE = /(1x1|pixel|spacer|tracking|analytics|feedburner|gravatar|\/emoji\/|blank\.gif|feeds\.feedblitz|\/avatar|\/\/cpx\.|\/cpx\.php|\/count\.gif|vgwort\.de)/i;
 
 export function usableImage(raw: string, base?: string): string | undefined {
@@ -233,13 +233,13 @@ function finish(title: string, siteUrl: string | undefined, articles: (Article |
   return { title: truncate(cleanTitle(title), 120) || undefined, siteUrl, articles: out };
 }
 
-/** So viele Einträge wertet parseFeed höchstens aus; die Reserve deckt Einträge ohne gültigen Link ab. */
+/** parseFeed evaluates at most this many entries; the reserve covers entries without a valid link. */
 export const MAX_PARSED_ITEMS = MAX_ARTICLES + 5;
 
 /**
- * Schneidet alle Einträge nach den ersten MAX_PARSED_ITEMS heraus, bevor der XML-Parser läuft. Manche
- * Feeds enthalten Hunderte Einträge (OpenAI über 1300); sie vollständig zu parsen kostet mehr CPU-Zeit,
- * als ein Worker im Gratis-Plan pro Aufruf hat (Fehler 1102). Gibt null zurück, wenn nichts zu kürzen ist.
+ * Cuts out all entries after the first MAX_PARSED_ITEMS before the XML parser runs. Some feeds
+ * contain hundreds of entries (OpenAI over 1300); parsing them in full costs more CPU time than a
+ * worker on the free plan has per request (error 1102). Returns null when there is nothing to trim.
  */
 export function trimFeedItems(xml: string): string | null {
   const re = /<\/(item|entry)\s*>/gi;
@@ -249,8 +249,8 @@ export function trimFeedItems(xml: string): string | null {
     if (!match) return null;
   }
   const cut = re.lastIndex;
-  if (!re.exec(xml)) return null; // genau MAX_PARSED_ITEMS Einträge: nichts zu kürzen
-  // Den Abschluss des Dokuments behalten, damit das gekürzte XML wohlgeformt bleibt.
+  if (!re.exec(xml)) return null; // exactly MAX_PARSED_ITEMS entries: nothing to trim
+  // Keep the end of the document, so the trimmed XML stays well-formed.
   const closer = match![1].toLowerCase() === 'entry' ? /<\/feed\s*>/gi : /<\/(channel|rdf:RDF)\s*>/gi;
   let tail = -1;
   for (let m = closer.exec(xml); m; m = closer.exec(xml)) {
@@ -265,13 +265,13 @@ function parseXml(xml: string): Obj {
     try {
       return parser.parse(trimmed) as Obj;
     } catch {
-      // Kürzen ging schief (z. B. `</item>` in einem CDATA-Block): das ganze Dokument parsen
+      // Trimming went wrong (e.g. `</item>` inside a CDATA block): parse the whole document
     }
   }
   return parser.parse(xml) as Obj;
 }
 
-/** Parst RSS 2.0, RSS 1.0 (RDF) und Atom. Wirft einen Fehler, wenn das Dokument kein Feed ist. */
+/** Parses RSS 2.0, RSS 1.0 (RDF) and Atom. Throws an error when the document is not a feed. */
 export function parseFeed(xml: string, feedUrl?: string): ParsedFeed {
   let doc: Obj;
   try {
@@ -327,7 +327,7 @@ export function parseFeed(xml: string, feedUrl?: string): ParsedFeed {
   throw new Error('Not a valid feed');
 }
 
-/** Grober Test, ob ein Dokument wie ein Feed aussieht (für die Feed-Erkennung). */
+/** Rough check whether a document looks like a feed (for feed discovery). */
 export function looksLikeFeed(text: string): boolean {
   return /<(rss|feed|rdf:RDF)[\s>]/i.test(text.slice(0, 2000));
 }

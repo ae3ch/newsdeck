@@ -18,15 +18,15 @@ interface Props extends SetupActions {
 const STEPS = ['Language', 'Topics', 'Sources', 'Appearance'] as const;
 const SOURCES_STEP = 2;
 
-/** Geführte Einrichtung in vier Schritten. Läuft als normale Seite, nicht als Dialog. */
+/** Guided setup in four steps. Runs as a normal page, not as a dialog. */
 export function Onboarding({ config, onFinish, onCancel, ...actions }: Props) {
   const [step, setStep] = useState(0);
-  // Beim Wechsel zum Quellen-Schritt festgehaltene Themen, damit ein Abschnitt nicht verschwindet,
-  // sobald man dort die letzte Quelle abwählt.
+  // Topics captured when switching to the sources step, so a section does not disappear
+  // as soon as its last source is deselected there.
   const [chosen, setChosen] = useState<string[]>([]);
   const heading = useRef<HTMLHeadingElement>(null);
   const { settings } = config;
-  // Katalog nach Sprachwahl gefiltert; nur diese Quellen werden angeboten und gezählt.
+  // Catalog filtered by the language selection; only these sources are offered and counted.
   const sources = visibleSources(config);
 
   const activeCategories = CATEGORIES.filter((c) => sources.some((s) => !s.custom && s.category === c.id && s.enabled)).map(

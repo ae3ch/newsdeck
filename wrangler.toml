@@ -2,15 +2,15 @@ name = "newsdeck"
 main = "worker/index.ts"
 compatibility_date = "2026-11-01"
 
-# Die gebaute Seite (npm run build). Cloudflare liefert sie direkt aus, ohne den Worker aufzurufen;
-# unbekannte Pfade bekommen index.html. Nur /api/* geht an den Worker.
+# The built site (npm run build). Cloudflare serves it directly without invoking the worker;
+# unknown paths get index.html. Only /api/* goes to the worker.
 [assets]
 directory = "./dist"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
 run_worker_first = ["/api/*"]
 
-# Workers Logs: jede Anfrage erscheint im Dashboard unter Workers & Pages → newsdeck → Logs.
+# Workers Logs: every request appears in the dashboard under Workers & Pages → newsdeck → Logs.
 [observability.logs]
 enabled = true
 invocation_logs = true

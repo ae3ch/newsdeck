@@ -22,7 +22,7 @@ describe('decidePoll', () => {
 
   it('loads once the shared state is one interval old', () => {
     expect(decidePoll({ ...base, sharedAt: NOW - I })).toEqual({ fetchNow: true });
-    expect(decidePoll({ ...base, sharedAt: NOW - I + 500 })).toEqual({ fetchNow: true }); // Toleranz
+    expect(decidePoll({ ...base, sharedAt: NOW - I + 500 })).toEqual({ fetchNow: true }); // tolerance
   });
 
   it('waits briefly for another tab that is loading right now', () => {

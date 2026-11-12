@@ -1,10 +1,10 @@
 import { isSafeLink } from './format';
 
 export const SAVED_KEY = 'tech-news:saved';
-/** So viele gemerkte Artikel bleiben erhalten; ältere fallen heraus. */
+/** This many saved articles are kept; older ones drop out. */
 export const MAX_SAVED = 500;
 
-/** Ein gemerkter Artikel. Er wird ganz gespeichert, weil er nach einiger Zeit aus dem Feed verschwindet. */
+/** A saved article. It is stored in full, because it disappears from the feed after a while. */
 export interface SavedArticle {
   link: string;
   title: string;
@@ -12,13 +12,13 @@ export interface SavedArticle {
   pubDate: string | null;
   sourceId: string;
   sourceName: string;
-  /** Zeitpunkt des Merkens (ms). */
+  /** Time it was saved (ms). */
   savedAt: number;
 }
 
 export const isSaved = (list: SavedArticle[], link: string): boolean => list.some((a) => a.link === link);
 
-/** Merkt einen Artikel (neueste zuerst) oder entfernt ihn, wenn er schon gemerkt ist. */
+/** Saves an article (newest first), or removes it if it is already saved. */
 export function toggleSaved(list: SavedArticle[], entry: SavedArticle, max = MAX_SAVED): SavedArticle[] {
   if (isSaved(list, entry.link)) return list.filter((a) => a.link !== entry.link);
   return [entry, ...list].slice(0, max);
@@ -27,7 +27,7 @@ export function toggleSaved(list: SavedArticle[], entry: SavedArticle, max = MAX
 const text = (v: unknown, max: number): string | null =>
   typeof v === 'string' && v.trim() ? v.replace(/\s+/g, ' ').trim().slice(0, max) : null;
 
-/** Liest die gespeicherte Liste; unbrauchbare Einträge und doppelte Links fallen weg. */
+/** Reads the stored list; unusable entries and duplicate links are dropped. */
 export function parseSaved(raw: string | null): SavedArticle[] {
   let data: unknown;
   try {

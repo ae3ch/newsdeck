@@ -22,7 +22,7 @@ export interface GridItem {
 interface Props {
   items: GridItem[];
   limit: number;
-  /** Je Quelle die Zahl der zusätzlich eingeblendeten Artikel. */
+  /** Per source, the number of additionally shown articles. */
   expanded: Record<string, number>;
   onMore: (sourceId: string, step: number) => void;
   onLess: (sourceId: string) => void;
@@ -33,7 +33,7 @@ interface Props {
   now: number;
   filtered: boolean;
   showImages: boolean;
-  /** Verschiebt Quelle `fromId` an die Position von `toId`. */
+  /** Moves source `fromId` to the position of `toId`. */
   onMove: (fromId: string, toId: string) => void;
 }
 

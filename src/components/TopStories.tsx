@@ -32,10 +32,10 @@ interface Props {
 }
 
 /*
- * Aufbau je Breite:
- * - schmal: Wisch-Leiste, jede Meldung mit Bild oben, die nächste schaut hervor;
- * - ab `sm`: Aufmacher über die ganze Breite (Bild links), darunter zwei Spalten mit kleinen Bildern;
- * - ab `lg`: Aufmacher links mit großem Bild, die übrigen Meldungen als Liste rechts daneben.
+ * Layout per width:
+ * - narrow: swipeable strip, each story with its image on top, the next one peeking in;
+ * - from `sm`: lead story across the full width (image left), below it two columns with small images;
+ * - from `lg`: lead story on the left with a large image, the other stories as a list to its right.
  */
 const LAYOUT = {
   lead: {
@@ -45,7 +45,7 @@ const LAYOUT = {
     body: 'sm:pr-10 sm:pt-1 lg:pr-0 lg:pt-0',
     title: 'text-lg leading-tight sm:text-2xl lg:text-[1.75rem] lg:leading-[1.15]',
     save: 'sm:right-0 sm:top-0 lg:right-10 lg:top-2',
-    // Auf dem Bild mit Schleier, ab `sm` neben der Schlagzeile, ab `lg` wieder auf dem Bild.
+    // On the image with a scrim, from `sm` next to the headline, from `lg` on the image again.
     tone: (saved: boolean) =>
       saved
         ? 'bg-black/55 text-accent-bright sm:bg-transparent sm:text-accent lg:bg-black/55 lg:text-accent-bright'

@@ -5,11 +5,11 @@ import { handleFeeds } from './api/feeds';
 import { handleOg } from './api/og';
 
 interface Env {
-  /** Die gebaute Seite aus dist/, siehe [assets] in wrangler.toml. */
+  /** The built site from dist/, see [assets] in wrangler.toml. */
   ASSETS: Fetcher;
   /**
-   * Optional: Mengenbegrenzung je IP-Adresse. Nicht standardmässig eingerichtet, weil Cloudflare nicht
-   * dokumentiert, ob das Binding im Free-Plan und über den Deploy-Button verfügbar ist; siehe README.
+   * Optional: rate limiting per IP address. Not set up by default, because Cloudflare does not
+   * document whether the binding is available on the free plan and through the deploy button; see README.
    */
   API_LIMITER?: RateLimit;
 }
@@ -27,8 +27,8 @@ const jsonError = (status: number, error: string, headers: Record<string, string
   });
 
 /**
- * Einstieg des Workers. Dateien der Seite liefert Cloudflare direkt aus dist/ aus; hierher kommen
- * nur Anfragen unter /api/ (`run_worker_first` in wrangler.toml).
+ * Entry point of the worker. Cloudflare serves the site's files directly from dist/; only
+ * requests under /api/ come here (`run_worker_first` in wrangler.toml).
  */
 export default {
   async fetch(request, env, ctx): Promise<Response> {
@@ -40,7 +40,7 @@ export default {
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       return jsonError(405, 'Method not allowed', { Allow: 'GET, HEAD' });
     }
-    // Nur die eigene Seite darf die API nutzen; sonst könnten Fremde das Kontingent aufbrauchen.
+    // Only the own site may use the API; otherwise others could use up the quota.
     if (!isSameOrigin(request)) return jsonError(403, 'Forbidden');
     if (env.API_LIMITER) {
       const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';

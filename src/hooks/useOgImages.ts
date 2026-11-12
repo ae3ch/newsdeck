@@ -7,7 +7,7 @@ const MAX_ENTRIES = 1500;
 const NEGATIVE_TTL = 24 * 3600_000;
 const PARALLEL = 2;
 
-/** link → [Bild-URL oder '' (kein Bild), Zeitstempel] */
+/** link → [image URL or '' (no image), timestamp] */
 type Store = Record<string, [string, number]>;
 
 function readStore(): Store {
@@ -28,13 +28,13 @@ function writeStore(store: Store) {
     }
     localStorage.setItem(CACHE_KEY, JSON.stringify(Object.fromEntries(entries)));
   } catch {
-    // Speicher voll oder gesperrt: Bilder werden dann beim nächsten Besuch neu ermittelt
+    // storage full or blocked: images are then looked up again on the next visit
   }
 }
 
 /**
- * Ermittelt Vorschaubilder für Artikel, deren Feed kein Bild mitliefert.
- * Ergebnisse werden im Browser gemerkt, damit jede Seite nur einmal abgefragt wird.
+ * Finds preview images for articles whose feed does not include an image.
+ * Results are remembered in the browser, so each page is queried only once.
  */
 export function useOgImages(links: string[], enabled: boolean): Record<string, string> {
   const store = useRef<Store | null>(null);
@@ -56,7 +56,7 @@ export function useOgImages(links: string[], enabled: boolean): Record<string, s
       if (inflight.current.has(link)) return false;
       const entry = known[link];
       if (!entry) return true;
-      // Seiten ohne Bild nach einem Tag erneut versuchen.
+      // Retry pages without an image after a day.
       return entry[0] === '' && now - entry[1] > NEGATIVE_TTL;
     });
     if (todo.length === 0) return;
@@ -78,7 +78,7 @@ export function useOgImages(links: string[], enabled: boolean): Record<string, s
         const found: Record<string, string> = {};
         for (const link of batch) {
           inflight.current.delete(link);
-          // Bei Netzwerkfehlern nichts merken, damit es später erneut versucht wird.
+          // Remember nothing on network errors, so it is retried later.
           if (!result) continue;
           const image = result[link] ?? '';
           known[link] = [image, at];

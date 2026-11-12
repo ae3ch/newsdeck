@@ -13,19 +13,19 @@ function store(list: SavedArticle[]) {
   try {
     localStorage.setItem(SAVED_KEY, JSON.stringify(list));
   } catch {
-    // ohne Speicher gilt die Merkliste nur bis zum Neuladen
+    // without storage the reading list only lasts until the next reload
   }
 }
 
 export interface SavedState {
   saved: SavedArticle[];
   isSaved: (link: string) => boolean;
-  /** Merkt den Artikel oder entfernt ihn, wenn er schon gemerkt ist. */
+  /** Saves the article, or removes it if it is already saved. */
   toggle: (entry: Omit<SavedArticle, 'savedAt'>) => void;
   clear: () => void;
 }
 
-/** Merkliste «Später lesen» im localStorage, abgeglichen zwischen offenen Tabs. */
+/** «Read later» list in localStorage, kept in sync between open tabs. */
 export function useSaved(): SavedState {
   const [saved, setSaved] = useState(load);
 
@@ -38,7 +38,7 @@ export function useSaved(): SavedState {
   }, []);
 
   const toggle = useCallback((entry: Omit<SavedArticle, 'savedAt'>) => {
-    // Vom gespeicherten Stand ausgehen, damit Änderungen aus anderen Tabs erhalten bleiben.
+    // Start from the stored state, so changes from other tabs are kept.
     const next = toggleSaved(load(), { ...entry, savedAt: Date.now() });
     store(next);
     setSaved(next);

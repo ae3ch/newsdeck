@@ -2,12 +2,12 @@ import type { Topic } from '../lib/topics';
 
 interface Props {
   topics: Topic[];
-  /** Gewähltes Thema oder null für alle. */
+  /** Selected topic, or null for all. */
   value: string | null;
   onChange: (topic: string | null) => void;
 }
 
-/** Themen als Chips über den Karten: auf schmalen Bildschirmen seitlich wischbar, sonst umbrechend. */
+/** Topics as chips above the cards: swipeable sideways on narrow screens, wrapping otherwise. */
 export function TopicFilter({ topics, value, onChange }: Props) {
   const chips = [{ id: null, label: 'All', count: topics.reduce((n, t) => n + t.count, 0) }, ...topics];
   return (

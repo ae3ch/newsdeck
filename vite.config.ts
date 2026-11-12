@@ -5,10 +5,10 @@ import type { Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
-/** Dateien aus public/, die die App zum Starten ohne Netz braucht. */
+/** Files from public/ that the app needs to start offline. */
 const SHELL = ['/theme.js', '/favicon.svg', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/apple-touch-icon.png'];
 
-/** Schreibt /sw.js aus src/sw.js und setzt die Liste der Build-Dateien samt Version ein. */
+/** Writes /sw.js from src/sw.js and fills in the list of build files and the version. */
 function serviceWorker(): Plugin {
   return {
     name: 'newsdeck-service-worker',
@@ -32,7 +32,7 @@ function serviceWorker(): Plugin {
 export default defineConfig({
   plugins: [react(), tailwindcss(), serviceWorker()],
   server: {
-    // Im Dev-Modus läuft der Worker (API) unter wrangler auf Port 8788.
+    // In dev mode the worker (API) runs under wrangler on port 8788.
     proxy: { '/api': 'http://127.0.0.1:8788' },
   },
   test: { environment: 'node', include: ['tests/**/*.test.ts'] },

@@ -2,11 +2,11 @@ import type { Page } from '@playwright/test';
 import { DEFAULT_SOURCES } from '../src/data/defaultSources';
 import { expect, test } from './fixtures';
 
-/** Die Karten der Quellen. Die Top-Meldungen sind Links, keine <article>. */
+/** The source cards. Top stories are links, not <article> elements. */
 const cards = (page: Page) => page.locator('main article');
 const overflow = (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-/** Klasse `text-muted` als eigenes Wort, nicht als Teil von `group-visited:text-muted`. */
+/** The `text-muted` class as a separate word, not as part of `group-visited:text-muted`. */
 const DIMMED = /(^|\s)text-muted(\s|$)/;
 
 const CUSTOM_LAYOUT = {
@@ -19,13 +19,13 @@ const CUSTOM_LAYOUT = {
   settings: { theme: 'light', articlesPerCard: 4, showTopStories: false, showImages: true, languages: ['de', 'en'] },
 };
 
-/** Öffnet eine Adresse mit vollständigem Neuladen, auch wenn sich nur der Hash unterscheidet. */
+/** Opens an address with a full reload, even when only the hash differs. */
 async function open(page: Page, url: string) {
   await page.goto('about:blank');
   await page.goto(url);
 }
 
-test('kein horizontales Scrollen in allen Ansichten, bei 390 und 320 px', async ({ page }) => {
+test('no horizontal scrolling in any view, at 390 and 320 px', async ({ page }) => {
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 640 });
     for (const hash of ['', '#customize', '#setup', '#saved', '#privacy', '#cookies', '#terms']) {
@@ -40,14 +40,14 @@ test('kein horizontales Scrollen in allen Ansichten, bei 390 und 320 px', async 
   }
 });
 
-test('erster Besuch zeigt direkt das Dashboard, ohne Einrichtung anzubieten', async ({ page }) => {
+test('first visit shows the dashboard right away, without offering setup', async ({ page }) => {
   await page.goto('/');
   await expect(cards(page).first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Start guided setup' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Which languages do you read news in?' })).toHaveCount(0);
 });
 
-test('zeigt vier Artikel pro Quelle und lädt in Schritten nach', async ({ page }) => {
+test('shows four articles per source and loads more in steps', async ({ page }) => {
   await page.goto('/');
   const card = cards(page).first();
   const rows = card.locator('ol > li');
@@ -61,11 +61,11 @@ test('zeigt vier Artikel pro Quelle und lädt in Schritten nach', async ({ page 
 
   await card.getByRole('button', { name: 'Show less' }).click();
   await expect(rows).toHaveCount(4);
-  // Die zweite Karte blieb davon unberührt.
+  // The second card was not affected.
   await expect(cards(page).nth(1).locator('ol > li')).toHaveCount(4);
 });
 
-test('zeigt auf breiten Bildschirmen sechs Artikel pro Quelle', async ({ page }) => {
+test('shows six articles per source on wide screens', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/');
   const card = cards(page).first();
@@ -73,13 +73,13 @@ test('zeigt auf breiten Bildschirmen sechs Artikel pro Quelle', async ({ page })
   await card.getByRole('button', { name: 'Show 6 more' }).click();
   await expect(card.locator('ol > li')).toHaveCount(12);
 
-  // Schmaler gezogen: wieder vier, wie auf dem Handy.
+  // Narrowed again: back to four, as on a phone.
   await card.getByRole('button', { name: 'Show less' }).click();
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(card.locator('ol > li')).toHaveCount(4);
 });
 
-test('Vorschaubilder werden nur für sichtbare Artikel angefragt', async ({ page, ogRequests }) => {
+test('preview images are requested only for visible articles', async ({ page, ogRequests }) => {
   await page.goto('/');
   await expect(cards(page).first().locator('ol > li')).toHaveCount(4);
   const sources = await cards(page).count();
@@ -94,7 +94,7 @@ test('Vorschaubilder werden nur für sichtbare Artikel angefragt', async ({ page
   await expect.poll(() => ogRequests.length).toBe(before + 4);
 });
 
-test('Suche klappt auf dem Handy auf und filtert die Artikel', async ({ page }) => {
+test('search expands on a phone and filters the articles', async ({ page }) => {
   await page.goto('/');
   const search = page.getByRole('searchbox');
   await expect(search).toBeHidden();
@@ -109,10 +109,10 @@ test('Suche klappt auf dem Handy auf und filtert die Artikel', async ({ page }) 
   await expect(cards(page).first().locator('ol > li')).toHaveCount(4);
 });
 
-test.describe('mit Maus am Desktop', () => {
+test.describe('with a mouse on desktop', () => {
   test.use({ viewport: { width: 1280, height: 900 }, isMobile: false, hasTouch: false });
 
-  test('Suche ist ein Symbol, das beim Überfahren aufklappt und den Fokus erhält', async ({ page }) => {
+  test('search is an icon that expands on hover and receives focus', async ({ page }) => {
     await page.goto('/');
     const search = page.getByRole('searchbox');
     const width = () => search.evaluate((el) => el.getBoundingClientRect().width);
@@ -123,11 +123,11 @@ test.describe('mit Maus am Desktop', () => {
     await expect(search).toBeFocused();
     await expect.poll(width).toBeGreaterThan(200);
     await page.keyboard.type('headline 1');
-    // Mit Suchbegriff bleibt das Feld offen, auch ohne Maus darüber.
+    // With a search term the field stays open, even without the mouse over it.
     await page.mouse.move(640, 600);
     await expect.poll(width).toBeGreaterThan(200);
 
-    // Escape leert und schliesst; ohne Begriff klappt es beim Verlassen von selbst zu.
+    // Escape clears and closes; without a term it collapses on its own when the mouse leaves.
     await page.keyboard.press('Escape');
     await expect(search).toHaveValue('');
     await expect.poll(width).toBeLessThan(50);
@@ -139,7 +139,7 @@ test.describe('mit Maus am Desktop', () => {
   });
 });
 
-test('Themen-Filter zeigt nur die Quellen eines Themas', async ({ page }) => {
+test('topic filter shows only the sources of one topic', async ({ page }) => {
   await page.goto('/');
   const chips = page.getByRole('group', { name: 'Filter sources by topic' }).getByRole('button');
   const countOf = async (index: number) => Number(await chips.nth(index).locator('span').innerText());
@@ -151,14 +151,14 @@ test('Themen-Filter zeigt nur die Quellen eines Themas', async ({ page }) => {
   await chips.nth(1).click();
   await expect(chips.nth(1)).toHaveAttribute('aria-pressed', 'true');
   await expect(cards(page)).toHaveCount(inTopic);
-  // Die Top-Meldungen bleiben themenübergreifend stehen.
+  // Top stories stay in place across all topics.
   await expect(page.getByRole('heading', { name: 'Top stories today' })).toBeVisible();
 
   await chips.nth(0).click();
   await expect(cards(page)).toHaveCount(total);
 });
 
-test('Top-Meldungen sind auf dem Handy eine Wisch-Leiste', async ({ page }) => {
+test('top stories are a swipeable strip on a phone', async ({ page }) => {
   await page.goto('/');
   const row = page.locator('section[aria-labelledby="top-stories"] > div').last();
   await expect(row.locator('a').first()).toBeVisible();
@@ -167,7 +167,7 @@ test('Top-Meldungen sind auf dem Handy eine Wisch-Leiste', async ({ page }) => {
   expect(await overflow(page)).toBe(0);
 });
 
-test('geöffnete Artikel bleiben nach dem Neuladen abgeblendet', async ({ page }) => {
+test('opened articles stay dimmed after a reload', async ({ page }) => {
   await page.goto('/');
   const link = cards(page).first().locator('ol > li a').first();
   const title = link.locator('span.line-clamp-3');
@@ -183,12 +183,12 @@ test('geöffnete Artikel bleiben nach dem Neuladen abgeblendet', async ({ page }
   await expect(title).toHaveClass(DIMMED);
 });
 
-test('Homescreen-Link bringt das Layout auf ein neues Gerät und in die App', async ({ page, context }) => {
+test('home screen link carries the layout to a new device and into the app', async ({ page, context }) => {
   const install = page.getByRole('heading', { name: 'Add Newsdeck to your home screen' });
   const question = page.getByText('This link contains a layout');
   const stored = (p: Page) => p.evaluate(() => localStorage.getItem('tech-news:config'));
 
-  // Link aus einem Layout mit eigener Quelle erzeugen.
+  // Create a link from a layout with a custom source.
   await page.goto('/');
   await page.evaluate((layout) => localStorage.setItem('tech-news:config', JSON.stringify(layout)), CUSTOM_LAYOUT);
   await open(page, '/#customize');
@@ -198,7 +198,7 @@ test('Homescreen-Link bringt das Layout auf ein neues Gerät und in die App', as
   const link = page.url();
   expect(link).toContain('#install=');
 
-  // Neues Gerät, im Browser: Layout gilt sofort, die Anleitung erscheint.
+  // New device, in the browser: the layout applies at once and the instructions appear.
   await page.evaluate(() => localStorage.clear());
   await open(page, link);
   await expect(install).toBeVisible();
@@ -206,7 +206,7 @@ test('Homescreen-Link bringt das Layout auf ein neues Gerät und in die App', as
   await expect(question).toBeHidden();
   expect(await stored(page)).toContain('Mein Blog');
 
-  // App vom Homescreen (iOS: eigener, leerer Speicher), erster Start: Dashboard mit dem Layout.
+  // App from the home screen (iOS: separate, empty storage), first launch: dashboard with the layout.
   await page.evaluate(() => localStorage.clear());
   const app = await context.newPage();
   await app.addInitScript(() => Object.defineProperty(Navigator.prototype, 'standalone', { get: () => true }));
@@ -216,7 +216,7 @@ test('Homescreen-Link bringt das Layout auf ein neues Gerät und in die App', as
   await expect(app.getByRole('button', { name: 'Start guided setup' })).toBeHidden();
   await expect(app.getByRole('heading', { name: 'Add Newsdeck to your home screen' })).toBeHidden();
 
-  // Zweiter Start, nachdem das Layout in der App geändert wurde: Die Startadresse zählt nicht mehr.
+  // Second launch, after the layout was changed in the app: the start address no longer counts.
   await app.evaluate(() => {
     const config = JSON.parse(localStorage.getItem('tech-news:config')!);
     config.sources = config.sources.map((s: { id: string }) => (s.id === 'golem' ? { id: 'golem', enabled: false } : s));
@@ -228,7 +228,7 @@ test('Homescreen-Link bringt das Layout auf ein neues Gerät und in die App', as
   await expect(app.getByText('This link contains a layout')).toBeHidden();
   await app.close();
 
-  // Im Browser mit abweichendem Layout: Rückfrage. «Keep mine» baut den Link aus dem eigenen neu.
+  // In the browser with a different layout: ask first. «Keep mine» rebuilds the link from the own layout.
   await open(page, link);
   await expect(question).toBeVisible();
   await page.getByRole('button', { name: 'Keep mine' }).click();
@@ -236,7 +236,7 @@ test('Homescreen-Link bringt das Layout auf ein neues Gerät und in die App', as
   await expect.poll(() => page.url()).not.toBe(link);
   expect(await stored(page)).toContain('"id":"golem","enabled":false');
 
-  // «Apply» übernimmt das Layout des Links; die Adresse bleibt.
+  // «Apply» takes over the layout from the link; the address stays.
   await open(page, link);
   await page.getByRole('button', { name: 'Apply' }).click();
   await expect(question).toBeHidden();
@@ -244,7 +244,7 @@ test('Homescreen-Link bringt das Layout auf ein neues Gerät und in die App', as
   await expect.poll(() => stored(page)).toContain('"id":"golem","enabled":true');
 });
 
-test('selbst erzeugte Links kommen mit QR-Code', async ({ page }) => {
+test('self-made links come with a QR code', async ({ page }) => {
   await page.goto('/#customize');
   await page.getByRole('button', { name: 'Create link' }).click();
   const shareQr = page.getByRole('img', { name: 'QR code of the link to this layout' });
@@ -254,7 +254,7 @@ test('selbst erzeugte Links kommen mit QR-Code', async ({ page }) => {
   await page.getByRole('button', { name: 'Create home-screen link' }).click();
   const installQr = page.getByRole('img', { name: 'QR code of the home-screen link' });
   await expect(installQr).toBeVisible();
-  // Ganze Pixel je Modul, und der Code passt in die Handybreite.
+  // Whole pixels per module, and the code fits the phone width.
   const box = await installQr.evaluate((el) => {
     const modules = Number(el.getAttribute('viewBox')!.split(' ')[2]);
     return { perModule: Number(el.getAttribute('width')) / modules, shown: el.getBoundingClientRect().width };
@@ -264,7 +264,7 @@ test('selbst erzeugte Links kommen mit QR-Code', async ({ page }) => {
   expect(await overflow(page)).toBe(0);
 });
 
-test('Artikel merken, in der Merkliste finden und wieder entfernen', async ({ page }) => {
+test('save an article, find it in the reading list and remove it again', async ({ page }) => {
   await page.goto('/');
   const row = cards(page).first().locator('ol > li').first();
   const title = await row.locator('a span.line-clamp-3').innerText();
@@ -282,7 +282,7 @@ test('Artikel merken, in der Merkliste finden und wieder entfernen', async ({ pa
   await expect(page.getByRole('button', { name: 'Saved for later (0)' })).toBeVisible();
 });
 
-test('OPML-Import legt neue Quellen an und erkennt vorhandene', async ({ page }) => {
+test('OPML import adds new sources and recognizes existing ones', async ({ page }) => {
   const heise = DEFAULT_SOURCES.find((s) => s.id === 'heise')!.feedUrl;
   const opml = `<?xml version="1.0"?><opml version="2.0"><body><outline text="Tech">
     <outline type="rss" text="Imported Blog" xmlUrl="https://imported.example/feed.xml"/>
@@ -298,7 +298,7 @@ test('OPML-Import legt neue Quellen an und erkennt vorhandene', async ({ page })
   expect((await download).suggestedFilename()).toBe('newsdeck-feeds.opml');
 });
 
-test('ausgeblendete Wörter entfernen Schlagzeilen vom Dashboard', async ({ page }) => {
+test('muted words remove headlines from the dashboard', async ({ page }) => {
   await page.goto('/#customize');
   await page.getByLabel('Word or phrase to hide').fill('headline 1');
   await page.getByRole('button', { name: 'Hide', exact: true }).click();
@@ -308,13 +308,13 @@ test('ausgeblendete Wörter entfernen Schlagzeilen vom Dashboard', async ({ page
   const first = cards(page).first().locator('ol > li a').first();
   await expect(first).toContainText('headline 2');
   await expect(page.getByText(/headlines hidden by your muted words/)).toBeVisible();
-  // «headline 1» trifft nicht «headline 10».
+  // «headline 1» does not match «headline 10».
   await cards(page).first().getByRole('button', { name: /^Show \d+ more/ }).click();
   await cards(page).first().getByRole('button', { name: /^Show \d+ more/ }).click();
   await expect(cards(page).first().getByText(/headline 10$/)).toBeVisible();
 });
 
-test('Quellen, die seit einem Tag nicht laden, werden gemeldet', async ({ page }) => {
+test('sources that have not loaded for a day are reported', async ({ page }) => {
   const feedUrl = 'https://broken.example/feed.xml';
   await page.addInitScript((url) => {
     localStorage.setItem(
@@ -337,10 +337,10 @@ test('Quellen, die seit einem Tag nicht laden, werden gemeldet', async ({ page }
   await expect(notice).toBeHidden();
 });
 
-test.describe('ohne Netz', () => {
+test.describe('offline', () => {
   test.use({ serviceWorkers: 'allow' });
 
-  test('startet aus dem Speicher und zeigt die zuletzt geladenen Schlagzeilen', async ({ page, context }) => {
+  test('starts from storage and shows the last loaded headlines', async ({ page, context }) => {
     await page.goto('/');
     await expect(cards(page).first().locator('ol > li')).toHaveCount(4);
     await page.evaluate(async () => {

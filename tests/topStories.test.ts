@@ -33,7 +33,7 @@ describe('rankTopStories', () => {
     { source: src('d'), articles: undefined },
   ];
 
-  it('stellt Themen mit den meisten Quellen nach vorn und wählt die Meldung mit Bild', () => {
+  it('puts topics with the most sources first and picks the story with an image', () => {
     const top = rankTopStories(items, NOW, 6);
     expect(top[0].article.title).toBe('United won’t let your AI agent book your flight');
     expect(top[0].coveredBy.sort()).toEqual(['A', 'B', 'C']);
@@ -41,7 +41,7 @@ describe('rankTopStories', () => {
     expect(top[1].article.title).toMatch(/PlayStation 5/);
   });
 
-  it('zeigt ein Thema nur einmal und füllt mit den neuesten Meldungen auf', () => {
+  it('shows a topic only once and fills up with the newest stories', () => {
     const top = rankTopStories(items, NOW, 6);
     const titles = top.map((s) => s.article.title);
     expect(titles.filter((t) => /United/.test(t))).toHaveLength(1);
@@ -50,13 +50,13 @@ describe('rankTopStories', () => {
     expect(top.slice(2).every((s) => s.coveredBy.length === 1)).toBe(true);
   });
 
-  it('ignoriert Meldungen, die älter als 24 Stunden sind, und hält die Obergrenze ein', () => {
+  it('ignores stories older than 24 hours and keeps to the upper limit', () => {
     expect(rankTopStories(items, NOW, 6).some((s) => /Alte Meldung/.test(s.article.title))).toBe(false);
     expect(rankTopStories(items, NOW, 1)).toHaveLength(1);
     expect(rankTopStories([], NOW, 6)).toEqual([]);
   });
 
-  it('fasst unverwandte Meldungen mit einem gemeinsamen Allerweltswort nicht zusammen', () => {
+  it('does not group unrelated stories that share one common word', () => {
     const top = rankTopStories(
       [
         { source: src('a'), articles: [art('a', 'Apple stellt neues MacBook vor', 5)] },
@@ -68,22 +68,22 @@ describe('rankTopStories', () => {
     expect(top.every((s) => s.coveredBy.length === 1)).toBe(true);
   });
 
-  it('zerlegt Titel in Themenwörter', () => {
+  it('splits titles into topic words', () => {
     expect([...tokenize('Die neuen AI-Agents von OpenAI: Was sie können')]).toEqual(['agent', 'openai']);
   });
 });
 
 describe('extractOgImage', () => {
   const page = 'https://site.example/artikel/1';
-  it('bevorzugt og:image vor twitter:image und löst relative Pfade auf', () => {
+  it('prefers og:image over twitter:image and resolves relative paths', () => {
     const html = `<head><meta name="twitter:image" content="https://cdn.example/tw.jpg">
       <meta content="/bilder/og.jpg?a=1&amp;b=2" property="og:image"></head>`;
     expect(extractOgImage(html, page)).toBe('https://site.example/bilder/og.jpg?a=1&b=2');
   });
-  it('nimmt twitter:image als Ersatz und kommt mit einfachen Anführungszeichen zurecht', () => {
+  it('takes twitter:image as a fallback and copes with single quotes', () => {
     expect(extractOgImage(`<meta name='twitter:image' content='https://cdn.example/tw.jpg'>`, page)).toBe('https://cdn.example/tw.jpg');
   });
-  it('lehnt unbrauchbare Angaben ab', () => {
+  it('rejects unusable values', () => {
     expect(extractOgImage('<meta property="og:image" content="javascript:alert(1)">', page)).toBeUndefined();
     expect(extractOgImage('<meta property="og:image" content="data:image/png;base64,AAAA">', page)).toBeUndefined();
     expect(extractOgImage('<meta property="og:image" content="/logo.svg">', page)).toBeUndefined();
@@ -93,7 +93,7 @@ describe('extractOgImage', () => {
 });
 
 describe('thumbUrl', () => {
-  it('baut die Adresse der verkleinerten Fassung in doppelter Auflösung', () => {
+  it('builds the address of the downscaled version at double resolution', () => {
     const url = new URL(thumbUrl('https://cdn.example/a b.jpg?x=1&y=2', 76, 56, 'https://wsrv.nl/')!);
     expect(url.origin + url.pathname).toBe('https://wsrv.nl/');
     expect(url.searchParams.get('url')).toBe('https://cdn.example/a b.jpg?x=1&y=2');
@@ -102,7 +102,7 @@ describe('thumbUrl', () => {
     expect(url.searchParams.get('output')).toBe('webp');
     expect(url.searchParams.has('we')).toBe(true);
   });
-  it('liefert null ohne Bilddienst oder bei unpassender Adresse', () => {
+  it('returns null without an image service or for an unsuitable address', () => {
     expect(thumbUrl('https://cdn.example/a.jpg', 76, 56, '')).toBeNull();
     expect(thumbUrl('data:image/png;base64,AAAA', 76, 56, 'https://wsrv.nl/')).toBeNull();
     expect(thumbUrl('/relativ.jpg', 76, 56, 'https://wsrv.nl/')).toBeNull();

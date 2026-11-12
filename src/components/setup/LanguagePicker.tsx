@@ -7,7 +7,7 @@ interface Props {
   onChange: (languages: Lang[]) => void;
 }
 
-/** Wahl der Inhaltssprachen. Quellen in nicht gewählten Sprachen werden überall ausgeblendet. */
+/** Choice of content languages. Sources in unselected languages are hidden everywhere. */
 export function LanguagePicker({ config, onChange }: Props) {
   const selected = config.settings.languages;
   return (
@@ -26,7 +26,7 @@ export function LanguagePicker({ config, onChange }: Props) {
                 title={only ? 'At least one language must stay selected' : undefined}
                 onClick={() => {
                   if (only) return;
-                  // Reihenfolge wie in LANGUAGES halten, damit gespeicherte Layouts vergleichbar bleiben.
+                  // Keep the order of LANGUAGES, so stored layouts stay comparable.
                   onChange(LANGUAGES.map((l) => l.id).filter((id) => (id === lang.id ? !on : selected.includes(id))));
                 }}
                 className={`flex w-full items-center gap-3 rounded-lg border p-4 text-left transition-colors duration-150 ${

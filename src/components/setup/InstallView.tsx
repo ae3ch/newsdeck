@@ -7,11 +7,11 @@ import { primaryButton, textButton } from './types';
 import { pageTitle, panel, panelTitle } from '../ui';
 
 interface Props {
-  /** Das Layout, das die Adresse dieser Seite trägt. */
+  /** The layout carried by this page's address. */
   config: DashboardConfig;
-  /** true, solange das Layout der Adresse ein fremdes ist, über das noch nicht entschieden wurde. */
+  /** true while the layout in the address is a foreign one that has not been decided on yet. */
   pending: boolean;
-  /** true, wenn das Layout beim Öffnen des Links gerade in diesen Browser übernommen wurde. */
+  /** true when the layout was just applied to this browser on opening the link. */
   adopted: boolean;
   onDone: () => void;
 }
@@ -21,8 +21,8 @@ function Steps({ children }: { children: ReactNode }) {
 }
 
 /**
- * Seite zum Homescreen-Link. Ihre Adresse enthält das Layout: Wer von hier aus ein Icon anlegt,
- * startet Newsdeck später mit genau diesen Quellen.
+ * Page for the home screen link. Its address holds the layout: whoever adds an icon from here
+ * later launches Newsdeck with exactly these sources.
  */
 export function InstallView({ config, pending, adopted, onDone }: Props) {
   const [notice, setNotice] = useState<string | null>(null);
@@ -43,7 +43,7 @@ export function InstallView({ config, pending, adopted, onDone }: Props) {
     }
   };
   const share = () => {
-    // Abbrechen des Teilen-Dialogs ist kein Fehler.
+    // Cancelling the share dialog is not an error.
     navigator.share({ title: 'Newsdeck', url }).catch(() => {});
   };
 

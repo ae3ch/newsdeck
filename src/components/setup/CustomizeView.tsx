@@ -15,11 +15,11 @@ import { textButton, type SetupActions } from './types';
 
 interface Props extends SetupActions {
   config: DashboardConfig;
-  /** Aktive Quellen, die seit über einem Tag nicht laden. */
+  /** Active sources that have not loaded for over a day. */
   broken: BrokenSource[];
   now: number;
   onStartOnboarding: () => void;
-  /** Öffnet die Seite mit dem Homescreen-Link. */
+  /** Opens the page with the home screen link. */
   onInstall: () => void;
 }
 
@@ -48,8 +48,8 @@ const SECTIONS = [
 ];
 
 /**
- * Inhaltsverzeichnis am linken Rand (ab `lg`). Schaltflächen statt Anker, weil der Hash die Ansicht bestimmt.
- * Hervorgehoben ist der Abschnitt, der zuletzt das obere Drittel des Fensters erreicht hat.
+ * Table of contents on the left edge (from `lg`). Buttons instead of anchors, because the hash selects the view.
+ * The highlighted section is the one that last reached the top third of the window.
  */
 function SectionNav({ sections }: { sections: typeof SECTIONS }) {
   const [current, setCurrent] = useState<string | undefined>(sections[0]?.id);
@@ -97,11 +97,11 @@ function SectionNav({ sections }: { sections: typeof SECTIONS }) {
   );
 }
 
-/** Die Anpassen-Seite: alle Einstellungen auf einen Blick, ohne Führung. */
+/** The customize page: all settings at a glance, without guidance. */
 export function CustomizeView({ config, broken, now, onStartOnboarding, onInstall, ...actions }: Props) {
   const { settings } = config;
   const brokenFeeds = new Set(broken.map((b) => b.source.feedUrl));
-  // Katalog nach Sprachwahl gefiltert; nur diese Quellen werden angeboten und gezählt.
+  // Catalog filtered by the language selection; only these sources are offered and counted.
   const sources = visibleSources(config);
   const active = sources.filter((s) => s.enabled).length;
   const [standalone] = useState(isStandalone);
@@ -109,7 +109,7 @@ export function CustomizeView({ config, broken, now, onStartOnboarding, onInstal
 
   return (
     <div className="mx-auto max-w-6xl">
-      {/* Zurück zum Dashboard führt die Schaltfläche in der Kopfleiste. */}
+      {/* The button in the header leads back to the dashboard. */}
       <div className="mb-6 sm:mb-8">
         <h1 className={pageTitle}>Customize your dashboard</h1>
         <p className="mt-2 text-sm text-muted">

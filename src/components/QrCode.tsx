@@ -3,16 +3,16 @@ import { encode } from 'uqr';
 
 interface Props {
   value: string;
-  /** Beschreibung für Screenreader. */
+  /** Description for screen readers. */
   label: string;
 }
 
-/** Angestrebte Kantenlänge in CSS-Pixeln. */
+/** Target edge length in CSS pixels. */
 const TARGET = 240;
-/** Mindestens so viele Pixel je Modul, sonst wird der Code auf Bildschirmen mit einfacher Auflösung unscharf. */
+/** At least this many pixels per module, otherwise the code gets blurry on standard-resolution screens. */
 const MIN_MODULE = 3;
 
-/** Wandelt die Modulmatrix in einen einzigen SVG-Pfad um: je Zeile ein Rechteck pro dunklem Abschnitt. */
+/** Turns the module matrix into a single SVG path: one rectangle per dark run in each row. */
 function toPath(data: boolean[][]): string {
   let d = '';
   data.forEach((row, y) => {
@@ -30,8 +30,8 @@ function toPath(data: boolean[][]): string {
 }
 
 /**
- * QR-Code als SVG. Immer schwarz auf weiss, auch im dunklen Farbschema: Invertierte Codes lesen
- * nicht alle Kameras. Passt der Inhalt nicht hinein, erscheint ein Hinweis statt des Codes.
+ * QR code as SVG. Always black on white, even in the dark color scheme: not every camera reads
+ * inverted codes. If the content does not fit, a notice appears instead of the code.
  */
 export function QrCode({ value, label }: Props) {
   const qr = useMemo(() => {
@@ -45,7 +45,7 @@ export function QrCode({ value, label }: Props) {
   if (!qr) {
     return <p className="text-sm text-muted">This link is too long for a QR code. Copy or share it instead.</p>;
   }
-  // Ganzzahlige Pixel je Modul, damit keine Kante zwischen zwei Pixeln verschwimmt.
+  // Whole pixels per module, so no edge blurs between two pixels.
   const size = qr.size * Math.max(MIN_MODULE, Math.round(TARGET / qr.size));
   return (
     <svg

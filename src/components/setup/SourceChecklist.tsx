@@ -7,13 +7,13 @@ import { ChevronRightIcon } from '../icons';
 
 interface Props {
   sources: Source[];
-  /** Nur diese Themen zeigen; ohne Angabe alle. */
+  /** Show only these topics; all when omitted. */
   categoryIds?: string[];
-  /** true: Themen als aufklappbare Abschnitte (für die Anpassen-Seite). */
+  /** true: topics as collapsible sections (for the customize page). */
   collapsible?: boolean;
   onToggle: (id: string) => void;
   onSetMany: (ids: string[], enabled: boolean) => void;
-  /** Feed-Adressen, die seit über einem Tag nicht laden. */
+  /** Feed addresses that have not loaded for over a day. */
   brokenFeeds?: Set<string>;
 }
 
@@ -39,7 +39,7 @@ function Rows({ members, onToggle, brokenFeeds }: { members: Source[]; onToggle:
   );
 }
 
-/** Quellen je Thema mit Häkchen zum einzelnen Ein- und Ausschalten. */
+/** Sources per topic with checkboxes to turn each one on or off. */
 export function SourceChecklist({ sources, categoryIds, collapsible = false, onToggle, onSetMany, brokenFeeds }: Props) {
   const cats = CATEGORIES.filter((c) => !categoryIds || categoryIds.includes(c.id));
   return (

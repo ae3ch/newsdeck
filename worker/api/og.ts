@@ -32,13 +32,13 @@ async function lookup(
     const hit = await cache?.match(key);
     if (hit) return ((await hit.json()) as { image: string | null }).image;
   } catch {
-    // Cache nicht verfügbar
+    // Cache unavailable
   }
 
   let image: string | null = null;
   let ttl = NONE_TTL;
   try {
-    // Die Meta-Angaben stehen im <head>; mehr als der Anfang der Seite wird nicht gelesen.
+    // The meta tags are in the <head>; nothing beyond the start of the page is read.
     const page = await safeFetch(url, {
       timeoutMs: 5000,
       maxBytes: 300_000,

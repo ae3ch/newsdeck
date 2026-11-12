@@ -57,13 +57,13 @@ export const handleDiscover: Handler = async (request) => {
     return json({ candidates: [], error: err instanceof FetchError ? err.message : 'Page unreachable' });
   }
 
-  // Fall 1: Die Adresse ist bereits ein Feed.
+  // Case 1: the address already is a feed.
   if (looksLikeFeed(page.text)) {
     const direct = toCandidate(page.finalUrl, page.text);
     if (direct) return json({ candidates: [direct] });
   }
 
-  // Fall 2: Feed-Verweise im HTML, sonst übliche Pfade probieren.
+  // Case 2: feed links in the HTML, otherwise try the usual paths.
   let urls = findFeedLinks(page.text, page.finalUrl).slice(0, MAX_CANDIDATES);
   if (urls.length === 0) {
     const origin = new URL(page.finalUrl).origin;

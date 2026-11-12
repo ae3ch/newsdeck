@@ -3,8 +3,8 @@ import { normalizeConfig } from '../src/lib/config';
 import { MAX_READ, addRead, hashLink, parseRead } from '../src/lib/readState';
 import { CUSTOM_TOPIC, topicsOf } from '../src/lib/topics';
 
-describe('Gelesen-Markierung', () => {
-  it('Prüfsumme ist stabil, kurz und unterscheidet Adressen', () => {
+describe('read marking', () => {
+  it('the checksum is stable, short and tells addresses apart', () => {
     const a = hashLink('https://example.com/artikel-1');
     expect(a).toBe(hashLink('https://example.com/artikel-1'));
     expect(a).not.toBe(hashLink('https://example.com/artikel-2'));
@@ -13,14 +13,14 @@ describe('Gelesen-Markierung', () => {
     expect(many.size).toBeGreaterThan(4990);
   });
 
-  it('hängt neue Einträge an, lässt bekannte stehen und begrenzt die Länge', () => {
+  it('appends new entries, leaves known ones and limits the length', () => {
     const list = ['a', 'b'];
     expect(addRead(list, 'a')).toBe(list);
     expect(addRead(list, 'c')).toEqual(['a', 'b', 'c']);
     expect(addRead(['a', 'b', 'c'], 'd', 3)).toEqual(['b', 'c', 'd']);
   });
 
-  it('liest nur gültige Listen', () => {
+  it('reads only valid lists', () => {
     expect(parseRead('["a","b"]')).toEqual(['a', 'b']);
     expect(parseRead('["a",1,null,"b"]')).toEqual(['a', 'b']);
     expect(parseRead(null)).toEqual([]);
@@ -30,8 +30,8 @@ describe('Gelesen-Markierung', () => {
   });
 });
 
-describe('Themen-Filter', () => {
-  it('nennt nur Themen mit Quellen, in Katalog-Reihenfolge, eigene Quellen zuletzt', () => {
+describe('topic filter', () => {
+  it('lists only topics with sources, in catalog order, custom sources last', () => {
     const cfg = normalizeConfig({
       version: 2,
       sources: [{ id: 'c-x', name: 'Blog', feedUrl: 'https://blog.example/feed' }, { id: 'krebs' }, { id: 'heise' }, { id: 'golem' }],

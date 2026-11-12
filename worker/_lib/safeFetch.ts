@@ -1,6 +1,6 @@
 /**
- * Abruf fremder URLs mit Schutz gegen Missbrauch als offener Proxy:
- * nur öffentliche http(s)-Hosts, begrenzte Redirects, Zeit- und Grössenlimit.
+ * Fetches foreign URLs with protection against abuse as an open proxy:
+ * only public http(s) hosts, limited redirects, time and size limits.
  */
 
 export class FetchError extends Error {}
@@ -20,7 +20,7 @@ const BLOCKED_SUFFIXES = [
   '.onion',
 ];
 
-/** Prüft eine vom Nutzer gelieferte URL. Wirft FetchError, wenn sie nicht abgerufen werden darf. */
+/** Checks a URL supplied by the user. Throws FetchError when it must not be fetched. */
 export function validatePublicUrl(raw: string): URL {
   if (typeof raw !== 'string' || raw.length === 0 || raw.length > 2000) {
     throw new FetchError('Invalid URL');
@@ -41,8 +41,8 @@ export function validatePublicUrl(raw: string): URL {
     throw new FetchError('This port is not allowed');
   }
   const host = url.hostname.toLowerCase().replace(/\.$/, '');
-  // IPv6-Literale stehen in eckigen Klammern; IPv4 normalisiert der URL-Parser
-  // (auch aus Hex-/Dezimalschreibweise) zu vier Dezimalblöcken.
+  // IPv6 literals are in square brackets; the URL parser normalizes IPv4
+  // (even from hex or decimal notation) to four decimal blocks.
   const isIp = host.startsWith('[') || /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
   if (
     isIp ||
@@ -59,7 +59,7 @@ export interface SafeFetchOptions {
   timeoutMs?: number;
   maxBytes?: number;
   accept?: string;
-  /** true: bei Erreichen von maxBytes abschneiden statt abbrechen (z. B. nur den <head> einer Seite lesen). */
+  /** true: cut off at maxBytes instead of failing (e.g. to read only the <head> of a page). */
   truncate?: boolean;
 }
 
@@ -88,7 +88,7 @@ export async function safeFetch(raw: string, opts: SafeFetchOptions = {}): Promi
         const location = res.headers.get('location');
         await res.body?.cancel().catch(() => {});
         if (!location || hop >= MAX_REDIRECTS) throw new FetchError('Too many redirects');
-        // Jedes Weiterleitungsziel wird erneut geprüft.
+        // Every redirect target is checked again.
         url = validatePublicUrl(new URL(location, url).toString());
         continue;
       }
@@ -141,7 +141,7 @@ async function readLimited(res: Response, maxBytes: number, truncate: boolean): 
   return out;
 }
 
-/** Dekodiert nach Charset aus Content-Type oder XML-Prolog (einige Feeds sind ISO-8859-1). */
+/** Decodes by the charset from Content-Type or the XML prolog (some feeds are ISO-8859-1). */
 export function decodeBody(bytes: Uint8Array, contentType: string): string {
   let charset = /charset=["']?([\w-]+)/i.exec(contentType)?.[1];
   const head = new TextDecoder('utf-8').decode(bytes.subarray(0, 200));
@@ -151,7 +151,7 @@ export function decodeBody(bytes: Uint8Array, contentType: string): string {
     try {
       return new TextDecoder(charset.toLowerCase()).decode(bytes);
     } catch {
-      // unbekanntes Charset: unten als UTF-8 lesen
+      // unknown charset: read as UTF-8 below
     }
   }
   return new TextDecoder('utf-8').decode(bytes);

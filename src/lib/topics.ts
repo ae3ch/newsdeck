@@ -4,16 +4,16 @@ import type { Source } from './config';
 export interface Topic {
   id: string;
   label: string;
-  /** Anzahl der Quellen in diesem Thema. */
+  /** Number of sources in this topic. */
   count: number;
 }
 
-/** Eigene Quellen haben kein Thema aus dem Katalog; sie bilden ein eigenes. */
+/** Custom sources have no topic from the catalog; they form their own. */
 export const CUSTOM_TOPIC = 'custom';
 
 export const topicOf = (source: Source): string => source.category ?? CUSTOM_TOPIC;
 
-/** Themen, zu denen es unter den Quellen mindestens eine gibt, in Katalog-Reihenfolge; eigene zuletzt. */
+/** Topics that have at least one source, in catalog order; custom ones last. */
 export function topicsOf(sources: Source[]): Topic[] {
   const counts = new Map<string, number>();
   for (const s of sources) counts.set(topicOf(s), (counts.get(topicOf(s)) ?? 0) + 1);

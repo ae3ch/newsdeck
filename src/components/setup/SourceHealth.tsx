@@ -7,7 +7,7 @@ import { panelTitle } from '../ui';
 
 export interface BrokenSource {
   source: Source;
-  /** Beginn der Fehlerserie (ms). */
+  /** Start of the failure streak (ms). */
   since: number;
   error: string;
 }
@@ -25,7 +25,7 @@ const days = (ms: number) => {
   return d <= 1 ? 'over a day' : `${d} days`;
 };
 
-/** Hinweis auf Quellen, die seit über einem Tag nicht laden, mit Abhilfen. */
+/** Notice about sources that have not loaded for over a day, with remedies. */
 export function SourceHealth({ broken, now, onToggle, onRemove, onReplaceFeed }: Props) {
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<Record<string, string>>({});

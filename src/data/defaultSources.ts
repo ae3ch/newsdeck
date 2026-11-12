@@ -4,7 +4,7 @@ export interface Category {
   description: string;
 }
 
-/** Themen, aus denen sich das Dashboard zusammenstellen lässt. Reihenfolge = Anzeige-Reihenfolge. */
+/** Topics the dashboard can be assembled from. Order = display order. */
 export const CATEGORIES: Category[] = [
   { id: 'general', label: 'General', description: 'The big tech publications: products, industry, analysis' },
   { id: 'security', label: 'Security', description: 'Vulnerabilities, attacks and data breaches' },
@@ -31,7 +31,7 @@ export interface DefaultSource {
   feedUrl: string;
   category: string;
   lang: 'de' | 'en';
-  /** true = bei einem neuen Dashboard von Anfang an aktiv. */
+  /** true = active from the start on a new dashboard. */
   starter?: boolean;
 }
 
@@ -46,11 +46,11 @@ const s = (
 ): DefaultSource => ({ id, name, siteUrl, feedUrl, category, lang, ...(starter ? { starter } : {}) });
 
 /**
- * Mitgelieferter Quellenkatalog. Die id ist stabil und darf nach Veröffentlichung nicht
- * mehr geändert werden, weil gespeicherte Layouts darauf verweisen.
+ * Built-in source catalog. The id is stable and must not change after release,
+ * because stored layouts refer to it.
  */
 export const DEFAULT_SOURCES: DefaultSource[] = [
-  // --- Startauswahl (Reihenfolge = Reihenfolge auf einem neuen Dashboard) ---
+  // --- Starter selection (order = order on a new dashboard) ---
   s('heise', 'heise online', 'https://www.heise.de', 'https://www.heise.de/rss/heise-atom.xml', 'general', 'de', true),
   s('golem', 'Golem.de', 'https://www.golem.de', 'https://rss.golem.de/rss.php?feed=RSS2.0', 'general', 'de', true),
   s('techcrunch', 'TechCrunch', 'https://techcrunch.com', 'https://techcrunch.com/feed/', 'business', 'en', true),
@@ -74,7 +74,7 @@ export const DEFAULT_SOURCES: DefaultSource[] = [
   s('techreview', 'MIT Technology Review', 'https://www.technologyreview.com', 'https://www.technologyreview.com/feed/', 'ai', 'en', true),
   s('zdnet', 'ZDNET', 'https://www.zdnet.com', 'https://www.zdnet.com/rss/news/', 'general', 'en', true),
 
-  // --- Allgemein ---
+  // --- General ---
   s('spiegel-netzwelt', 'SPIEGEL Netzwelt', 'https://www.spiegel.de/netzwelt/', 'https://www.spiegel.de/netzwelt/index.rss', 'general', 'de'),
   s('404media', '404 Media', 'https://www.404media.co', 'https://www.404media.co/rss/', 'general', 'en'),
   s('borncity', 'Borns IT- und Windows-Blog', 'https://www.borncity.com/blog/', 'https://borncity.com/blog/feed/', 'general', 'de'),
@@ -87,7 +87,7 @@ export const DEFAULT_SOURCES: DefaultSource[] = [
   s('schneier', 'Schneier on Security', 'https://www.schneier.com', 'https://www.schneier.com/feed/atom/', 'security', 'en'),
   s('therecord', 'The Record', 'https://therecord.media', 'https://therecord.media/feed', 'security', 'en'),
 
-  // --- Entwicklung ---
+  // --- Development ---
   s('heise-developer', 'heise Developer', 'https://www.heise.de/developer/', 'https://www.heise.de/developer/feed.xml', 'developer', 'de'),
   s('lobsters', 'Lobsters', 'https://lobste.rs', 'https://lobste.rs/rss', 'developer', 'en'),
   s('github-blog', 'GitHub Blog', 'https://github.blog', 'https://github.blog/feed/', 'developer', 'en'),
@@ -98,7 +98,7 @@ export const DEFAULT_SOURCES: DefaultSource[] = [
   s('smashing', 'Smashing Magazine', 'https://www.smashingmagazine.com', 'https://www.smashingmagazine.com/feed/', 'developer', 'en'),
   s('css-tricks', 'CSS-Tricks', 'https://css-tricks.com', 'https://css-tricks.com/feed/', 'developer', 'en'),
 
-  // --- KI ---
+  // --- AI ---
   s('the-decoder', 'The Decoder', 'https://the-decoder.de', 'https://the-decoder.de/feed/', 'ai', 'de'),
   s('openai-news', 'OpenAI News', 'https://openai.com/news/', 'https://openai.com/news/rss.xml', 'ai', 'en'),
   s('google-ai', 'Google AI Blog', 'https://blog.google/technology/ai/', 'https://blog.google/innovation-and-ai/technology/ai/rss/', 'ai', 'en'),
@@ -132,11 +132,11 @@ export const DEFAULT_SOURCES: DefaultSource[] = [
   s('gruenderszene', 'Gründerszene', 'https://www.businessinsider.de/gruenderszene/', 'https://www.businessinsider.de/gruenderszene/feed/', 'business', 'de'),
   s('deutsche-startups', 'deutsche-startups.de', 'https://www.deutsche-startups.de', 'https://www.deutsche-startups.de/feed/', 'business', 'de'),
 
-  // --- Netzpolitik ---
+  // --- Digital policy ---
   s('eff', 'EFF Deeplinks', 'https://www.eff.org/deeplinks', 'https://www.eff.org/rss/updates.xml', 'policy', 'en'),
   s('techdirt', 'Techdirt', 'https://www.techdirt.com', 'https://www.techdirt.com/feed/', 'policy', 'en'),
 
-  // --- Wissenschaft ---
+  // --- Science ---
   s('spektrum', 'Spektrum.de', 'https://www.spektrum.de', 'https://www.spektrum.de/alias/rss/spektrum-de-rss-feed/996406', 'science', 'de'),
   s('scinexx', 'scinexx', 'https://www.scinexx.de', 'https://www.scinexx.de/feed/', 'science', 'de'),
   s('quanta', 'Quanta Magazine', 'https://www.quantamagazine.org', 'https://www.quantamagazine.org/feed/', 'science', 'en'),
@@ -149,7 +149,7 @@ export const DEFAULT_SOURCES: DefaultSource[] = [
   s('kotaku', 'Kotaku', 'https://kotaku.com', 'https://kotaku.com/feed', 'gaming', 'en'),
   s('polygon', 'Polygon', 'https://www.polygon.com', 'https://www.polygon.com/feed/', 'gaming', 'en'),
 
-  // --- Krypto ---
+  // --- Crypto ---
   s('btc-echo', 'BTC-ECHO', 'https://www.btc-echo.de', 'https://www.btc-echo.de/feed/', 'crypto', 'de'),
   s('cointelegraph', 'Cointelegraph', 'https://cointelegraph.com', 'https://cointelegraph.com/rss', 'crypto', 'en'),
   s('decrypt', 'Decrypt', 'https://decrypt.co', 'https://decrypt.co/feed', 'crypto', 'en'),

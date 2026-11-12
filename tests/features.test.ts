@@ -15,8 +15,8 @@ const article = (n: number): SavedArticle => ({
   savedAt: n,
 });
 
-describe('Merkliste', () => {
-  it('merkt neueste zuerst, entfernt beim zweiten Mal und begrenzt die Länge', () => {
+describe('reading list', () => {
+  it('saves newest first, removes on the second call and limits the length', () => {
     let list = toggleSaved([], article(1));
     list = toggleSaved(list, article(2));
     expect(list.map((a) => a.savedAt)).toEqual([2, 1]);
@@ -24,7 +24,7 @@ describe('Merkliste', () => {
     expect(toggleSaved([article(1), article(2)], article(3), 2).map((a) => a.savedAt)).toEqual([3, 1]);
   });
 
-  it('liest nur brauchbare Einträge', () => {
+  it('reads only usable entries', () => {
     const raw = JSON.stringify([
       article(1),
       article(1),
@@ -42,8 +42,8 @@ describe('Merkliste', () => {
   });
 });
 
-describe('Stichwortfilter', () => {
-  it('bereinigt die Wortliste', () => {
+describe('keyword filter', () => {
+  it('cleans up the word list', () => {
     expect(cleanMutedWords(['  Deal ', 'deal', '', 'Black   Friday', 42, 'x'.repeat(60)])).toEqual([
       'Deal',
       'Black Friday',
@@ -53,7 +53,7 @@ describe('Stichwortfilter', () => {
     expect(cleanMutedWords(Array.from({ length: 80 }, (_, i) => `w${i}`))).toHaveLength(MAX_MUTED);
   });
 
-  it('trifft ganze Wörter und Phrasen, gross/klein egal, auch mit Umlauten', () => {
+  it('matches whole words and phrases, case-insensitive, including umlauts', () => {
     const muted = makeMuteMatcher(['AI', 'Black Friday', 'Ärger', 'C++'])!;
     expect(muted('New AI model released')).toBe(true);
     expect(muted('He said nothing')).toBe(false);
@@ -67,8 +67,8 @@ describe('Stichwortfilter', () => {
   });
 });
 
-describe('Fehlerhafte Quellen', () => {
-  it('führt Fehlerserien fort und beendet sie bei Erfolg', () => {
+describe('failing sources', () => {
+  it('continues failure streaks and ends them on success', () => {
     let h = updateHealth({}, [{ feedUrl: 'a', error: 'HTTP 404' }, { feedUrl: 'b' }], 1000);
     expect(h).toEqual({ a: { since: 1000, error: 'HTTP 404' } });
     const same = updateHealth(h, [{ feedUrl: 'a', error: 'HTTP 404' }], 5000);
@@ -76,11 +76,11 @@ describe('Fehlerhafte Quellen', () => {
     h = updateHealth(h, [{ feedUrl: 'a', error: 'HTTP 500' }], 6000);
     expect(h.a).toEqual({ since: 1000, error: 'HTTP 500' });
     expect(updateHealth(h, [{ feedUrl: 'a' }], 7000)).toEqual({});
-    // Fehlt ein Feed im Ergebnis (Anfrage gescheitert), bleibt sein Stand.
+    // If a feed is missing from the result (request failed), its state stays.
     expect(updateHealth(h, [{ feedUrl: 'b' }], 7000)).toBe(h);
   });
 
-  it('meldet erst nach einem Tag und hält nur aktive Feeds', () => {
+  it('reports only after a day and keeps only active feeds', () => {
     const h = { a: { since: 0, error: 'x' }, b: { since: BROKEN_AFTER, error: 'y' } };
     expect(Object.keys(brokenFeeds(h, BROKEN_AFTER + 1))).toEqual(['a']);
     expect(pruneHealth(h, ['b', 'c'])).toEqual({ b: h.b });
@@ -101,7 +101,7 @@ const OPML = `<?xml version="1.0"?>
 </body></opml>`;
 
 describe('OPML', () => {
-  it('liest verschachtelte Feeds und verwirft ungültige und doppelte', () => {
+  it('reads nested feeds and drops invalid and duplicate ones', () => {
     const feeds = parseOpml(OPML);
     expect(feeds.map((f) => f.feedUrl)).toEqual(['https://rss.golem.de/rss.php?feed=ATOM1.0', 'https://blog.example/feed.xml']);
     expect(feeds[1].title).toBe('Mein & Blog');
@@ -110,7 +110,7 @@ describe('OPML', () => {
     expect(() => parseOpml('<!DOCTYPE x [<!ENTITY a "b">]><opml><body/></opml>')).toThrow();
   });
 
-  it('schaltet Katalogquellen ein, legt unbekannte an und beachtet das Limit', () => {
+  it('turns on catalog sources, adds unknown ones and respects the limit', () => {
     const cfg = normalizeConfig({ version: 2, sources: [{ id: 'golem', enabled: false }] });
     const golemFeed = cfg.sources.find((s) => s.id === 'golem')!.feedUrl;
     const res = mergeOpml(cfg, [
@@ -128,7 +128,7 @@ describe('OPML', () => {
     expect(capped.added + capped.skipped).toBe(200);
   });
 
-  it('Export → Import ergibt dieselben aktiven Feeds', () => {
+  it('export → import yields the same active feeds', () => {
     const cfg = normalizeConfig({
       version: 2,
       sources: [{ id: 'c-1', name: 'A <b> & "c"', siteUrl: 'https://a.example/', feedUrl: 'https://a.example/feed?x=1&y=2' }],
@@ -141,9 +141,9 @@ describe('OPML', () => {
   });
 });
 
-describe('API-Schutz', () => {
+describe('API protection', () => {
   const req = (headers: Record<string, string>) => new Request('https://deck.example/api/feeds', { headers });
-  it('lässt nur Anfragen der eigenen Seite zu', () => {
+  it('allows only requests from the own site', () => {
     expect(isSameOrigin(req({ 'Sec-Fetch-Site': 'same-origin' }))).toBe(true);
     expect(isSameOrigin(req({ 'Sec-Fetch-Site': 'cross-site', Referer: 'https://deck.example/' }))).toBe(false);
     expect(isSameOrigin(req({ 'Sec-Fetch-Site': 'none' }))).toBe(false);

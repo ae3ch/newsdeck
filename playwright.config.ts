@@ -3,8 +3,8 @@ import { defineConfig, devices } from '@playwright/test';
 const PORT = 4173;
 
 /**
- * Browser-Tests in Handybreite gegen den fertigen Build. Feeds und Vorschaubilder beantwortet
- * e2e/fixtures.ts mit festen Daten, deshalb genügt der statische Vorschau-Server ohne Functions.
+ * Browser tests at phone width against the production build. e2e/fixtures.ts answers feeds and
+ * preview images with fixed data, so the static preview server is enough, without the worker.
  */
 export default defineConfig({
   testDir: 'e2e',
@@ -12,7 +12,7 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   reporter: 'list',
   use: {
-    // Gerätewerte eines iPhones, aber in Chromium: Das ist der Browser, der hier installiert wird.
+    // Device values of an iPhone, but in Chromium: that is the browser installed here.
     ...devices['iPhone 13'],
     browserName: 'chromium',
     baseURL: `http://127.0.0.1:${PORT}`,

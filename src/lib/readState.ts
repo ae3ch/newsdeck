@@ -1,11 +1,11 @@
 export const READ_KEY = 'tech-news:read';
-/** So viele geöffnete Artikel bleiben vermerkt; ältere fallen heraus. */
+/** This many opened articles stay recorded; older ones drop out. */
 export const MAX_READ = 2000;
 
 /**
- * Kurze Prüfsumme einer Artikeladresse (FNV-1a, 32 Bit). Gespeichert wird sie statt der Adresse:
- * Das spart Platz, und im Speicher steht kein lesbarer Verlauf. Eine seltene Verwechslung zweier
- * Artikel hätte nur zur Folge, dass einer zu Unrecht abgeblendet erscheint.
+ * Short checksum of an article address (FNV-1a, 32 bit). It is stored instead of the address:
+ * that saves space, and storage holds no readable history. A rare mix-up of two articles
+ * would only mean that one appears dimmed although it was not opened.
  */
 export function hashLink(link: string): string {
   let h = 0x811c9dc5;
@@ -16,14 +16,14 @@ export function hashLink(link: string): string {
   return (h >>> 0).toString(36);
 }
 
-/** Hängt einen Eintrag hinten an. Liefert dieselbe Liste zurück, wenn er schon enthalten ist. */
+/** Appends an entry at the end. Returns the same list if it is already included. */
 export function addRead(list: string[], hash: string, max = MAX_READ): string[] {
   if (list.includes(hash)) return list;
   const next = [...list, hash];
   return next.length > max ? next.slice(next.length - max) : next;
 }
 
-/** Liest die gespeicherte Liste; alles Unlesbare ergibt eine leere. */
+/** Reads the stored list; anything unreadable results in an empty one. */
 export function parseRead(raw: string | null): string[] {
   try {
     const data: unknown = raw ? JSON.parse(raw) : [];

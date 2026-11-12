@@ -1,9 +1,9 @@
 import { test as base } from '@playwright/test';
 
-/** Zwanzig Artikel ohne Bild für einen Feed; Titel und Adressen leiten sich vom Hostnamen ab. */
+/** Twenty articles without images for one feed; titles and addresses derive from the host name. */
 function feed(feedUrl: string) {
   const host = new URL(feedUrl).hostname.replace(/^www\./, '');
-  // Feeds unter broken.* laden nie (für den Hinweis auf fehlerhafte Quellen).
+  // Feeds under broken.* never load (for the notice about failing sources).
   if (host.startsWith('broken.')) return { feedUrl, articles: [], error: 'HTTP 404' };
   const articles = Array.from({ length: 20 }, (_, i) => ({
     title: `${host} headline ${i + 1}`,
@@ -15,9 +15,9 @@ function feed(feedUrl: string) {
 }
 
 /**
- * Beantwortet /api/feeds und /api/og mit festen Daten und sperrt alles ausserhalb des
- * Vorschau-Servers (Favicons, Bilddienst), damit die Tests ohne fremde Server laufen.
- * `ogRequests` sammelt die Artikeladressen, für die ein Vorschaubild angefragt wurde.
+ * Answers /api/feeds and /api/og with fixed data and blocks everything outside the
+ * preview server (favicons, image service), so the tests run without third-party servers.
+ * `ogRequests` collects the article addresses for which a preview image was requested.
  */
 export const test = base.extend<{ ogRequests: string[] }>({
   ogRequests: [

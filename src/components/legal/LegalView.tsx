@@ -13,7 +13,7 @@ const BODY: Record<LegalDoc, () => ReactNode> = {
   terms: TermsOfService,
 };
 
-/** Rahmen für die drei Rechtstexte: Titel, Stand, Querverweise und der jeweilige Inhalt. */
+/** Frame for the three legal texts: title, date, cross-references and the respective content. */
 export function LegalView({ doc, onBack }: { doc: LegalDoc; onBack: () => void }) {
   const Body = BODY[doc];
   const title = LEGAL_DOCS.find((d) => d.id === doc)!.title;

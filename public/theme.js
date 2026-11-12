@@ -1,4 +1,4 @@
-// Setzt das Farbschema vor dem ersten Rendern, damit nichts aufblitzt.
+// Sets the color scheme before the first render, so nothing flashes.
 (function () {
   var dark = matchMedia('(prefers-color-scheme: dark)').matches;
   try {
@@ -6,11 +6,11 @@
     var t = (c.settings && c.settings.theme) || 'system';
     if (t !== 'system') dark = t === 'dark';
   } catch (e) {
-    // ohne lesbaren Speicher gilt die Systemeinstellung
+    // without readable storage the system setting applies
   }
   if (!dark) return;
   document.documentElement.classList.add('dark');
-  // Farbe der Browser- und Statusleiste; das helle Gegenstück steht in index.html.
+  // Color of the browser and status bar; the light counterpart is in index.html.
   var meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', '#0c0d0f');
 })();

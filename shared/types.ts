@@ -1,11 +1,11 @@
-/** Typen, die Frontend und Pages Functions gemeinsam nutzen. */
+/** Types shared by the frontend and the worker. */
 
 export interface Article {
   title: string;
   link: string;
-  /** ISO-8601 oder null, wenn der Feed kein lesbares Datum liefert. */
+  /** ISO 8601, or null when the feed has no readable date. */
   pubDate: string | null;
-  /** Reiner Text, gekürzt. */
+  /** Plain text, truncated. */
   description: string;
   image?: string;
 }
@@ -19,9 +19,9 @@ export interface ParsedFeed {
 export interface FeedResult extends ParsedFeed {
   feedUrl: string;
   error?: string;
-  /** Prüfsumme des Inhalts. Der Browser schickt sie beim nächsten Abruf mit. */
+  /** Checksum of the content. The browser sends it along with the next request. */
   version?: string;
-  /** true: Inhalt entspricht der mitgeschickten Version; `articles` ist dann leer und der Browser behält seinen Stand. */
+  /** true: the content matches the version sent along; `articles` is then empty and the browser keeps its state. */
   unchanged?: boolean;
 }
 
@@ -35,7 +35,7 @@ export interface DiscoverCandidate {
   title: string;
   siteUrl?: string;
   articleCount: number;
-  /** Bis zu drei aktuelle Schlagzeilen als Vorschau. */
+  /** Up to three current headlines as a preview. */
   sample: string[];
 }
 
@@ -45,20 +45,20 @@ export interface DiscoverResponse {
 }
 
 export interface OgResponse {
-  /** Artikel-URL → Bild-URL, oder null, wenn die Seite kein Vorschaubild hat. */
+  /** Article URL → image URL, or null when the page has no preview image. */
   images: Record<string, string | null>;
 }
 
 /**
- * Höchstens 24 Feeds pro Aufruf: Im Gratis-Plan von Cloudflare sind pro Aufruf 50 Cache-Zugriffe
- * erlaubt, und jeder Feed braucht zwei (lesen, schreiben).
+ * At most 24 feeds per request: Cloudflare's free plan allows 50 cache operations per request,
+ * and every feed needs two (read, write).
  */
 export const MAX_FEEDS_PER_REQUEST = 24;
 /**
- * So viele Feeds schickt der Browser pro Aufruf. Das ist weniger als erlaubt, weil sich alle Feeds eines
- * Aufrufs die CPU-Zeit des Workers teilen (Gratis-Plan: 10 ms, sonst Fehler 1102). Die Pakete laufen
- * parallel. MAX_FEEDS_PER_REQUEST bleibt höher, damit ältere, noch zwischengespeicherte App-Versionen
- * weiter funktionieren.
+ * How many feeds the browser sends per request. This is fewer than allowed, because all feeds in one
+ * request share the worker's CPU time (free plan: 10 ms, otherwise error 1102). The batches run in
+ * parallel. MAX_FEEDS_PER_REQUEST stays higher so that older app versions still in a browser's
+ * cache keep working.
  */
 export const FEEDS_PER_BATCH = 6;
 export const MAX_OG_PER_REQUEST = 8;

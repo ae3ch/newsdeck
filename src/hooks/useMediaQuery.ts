@@ -1,6 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react';
 
-/** true, solange die Media Query zutrifft; folgt Änderungen (Fenstergrösse, Drehen des Geräts). */
+/** true while the media query matches; follows changes (window size, rotating the device). */
 export function useMediaQuery(query: string): boolean {
   const subscribe = useCallback(
     (onChange: () => void) => {

@@ -13,15 +13,15 @@ export interface FeedsState {
   feeds: FeedMap;
   loading: boolean;
   error: string | null;
-  /** Zeitpunkt der letzten erfolgreichen Aktualisierung (ms) oder null. */
+  /** Time of the last successful refresh (ms), or null. */
   updatedAt: number | null;
-  /** Je Feed: seit wann er ununterbrochen nicht lädt (siehe src/lib/health.ts). */
+  /** Per feed: since when it has failed to load without interruption (see src/lib/health.ts). */
   health: Health;
   refresh: () => void;
 }
 
-// Der letzte Stand liegt im localStorage: Beim nächsten Besuch erscheint die Seite sofort,
-// und vom Server werden nur Feeds übertragen, die sich seither geändert haben.
+// The last state lives in localStorage: on the next visit the page appears at once,
+// and the server only sends feeds that have changed since then.
 function readCache(): { feeds: FeedMap; at: number | null } {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
@@ -30,7 +30,7 @@ function readCache(): { feeds: FeedMap; at: number | null } {
       if (data.feeds && typeof data.feeds === 'object') return { feeds: data.feeds, at: data.at ?? null };
     }
   } catch {
-    // ohne Zwischenspeicher weiter
+    // carry on without the cache
   }
   return { feeds: {}, at: null };
 }
@@ -39,11 +39,11 @@ function writeCache(feeds: FeedMap, at: number) {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify({ feeds, at }));
   } catch {
-    // Speicher voll oder gesperrt: dann lieber keinen als einen veralteten Stand behalten
+    // storage full or blocked: better keep no state than an outdated one
     try {
       localStorage.removeItem(CACHE_KEY);
     } catch {
-      // nichts zu tun
+      // nothing to do
     }
   }
 }
@@ -60,24 +60,24 @@ function writeHealth(health: Health) {
   try {
     localStorage.setItem(HEALTH_KEY, JSON.stringify(health));
   } catch {
-    // ohne Speicher wird der Zustand der Quellen nicht über Besuche hinweg verfolgt
+    // without storage, the health of the sources is not tracked across visits
   }
 }
 
-/** Nur Feeds der aktuell aktiven Quellen aufbewahren, damit der Speicher nicht wächst. */
+/** Keep only feeds of the currently active sources, so storage does not grow. */
 function onlyActive(feeds: FeedMap, urls: string[]): FeedMap {
   const out: FeedMap = {};
   for (const u of urls) if (feeds[u]) out[u] = feeds[u];
   return out;
 }
 
-/** Neue Ergebnisse übernehmen; bei einem Fehler die zuletzt bekannten Artikel behalten. */
+/** Apply new results; on an error keep the last known articles. */
 export function mergeFeeds(prev: FeedMap, incoming: FeedResult[]): FeedMap {
   const next: FeedMap = { ...prev };
   for (const feed of incoming) {
     const old = prev[feed.feedUrl];
     if (feed.unchanged) {
-      // Server meldet «unverändert»: vorhandenen Stand behalten, einen alten Fehler löschen.
+      // Server reports «unchanged»: keep the existing state, clear an old error.
       if (old) next[feed.feedUrl] = old.error ? { ...old, error: undefined } : old;
       continue;
     }
@@ -87,7 +87,7 @@ export function mergeFeeds(prev: FeedMap, incoming: FeedResult[]): FeedMap {
   return next;
 }
 
-/** Beginn des letzten Abrufs irgendeines Tabs, siehe `src/lib/polling.ts`. */
+/** Start of the last fetch of any tab, see `src/lib/polling.ts`. */
 const CLAIM_KEY = 'tech-news:feeds-claim';
 
 function readClaim(): Claim | null {
@@ -105,22 +105,22 @@ function writeClaim(claim: Claim) {
   try {
     localStorage.setItem(CLAIM_KEY, JSON.stringify(claim));
   } catch {
-    // ohne Abstimmung: dann ruft eben jeder Tab selbst ab
+    // no coordination: then every tab simply fetches on its own
   }
 }
 
-/** Den eigenen Vermerk entfernen, wenn der Abruf abgebrochen wurde (Neuladen, Tab zu). */
+/** Remove the own claim when the fetch was aborted (reload, tab closed). */
 function releaseClaim(at: number) {
   try {
     if (readClaim()?.at === at) localStorage.removeItem(CLAIM_KEY);
   } catch {
-    // nichts zu tun
+    // nothing to do
   }
 }
 
 /**
- * Lädt die Feeds und danach minütlich; pausiert, solange der Tab verborgen ist.
- * Mehrere Tabs und ein Neuladen innerhalb der Minute teilen sich einen Abruf (siehe polling.ts).
+ * Loads the feeds, then every minute; pauses while the tab is hidden.
+ * Several tabs and a reload within the minute share one fetch (see polling.ts).
  */
 export function useFeeds(urls: string[]): FeedsState {
   const key = urls.join('\n');
@@ -133,7 +133,7 @@ export function useFeeds(urls: string[]): FeedsState {
   const refreshRef = useRef<() => void>(() => {});
   const feedsRef = useRef(feeds);
   feedsRef.current = feeds;
-  /** Zeitpunkt des Stands, der in diesem Tab angezeigt wird. */
+  /** Time of the state shown in this tab. */
   const shownAtRef = useRef<number | null>(initial.at);
 
   useEffect(() => {
@@ -147,10 +147,10 @@ export function useFeeds(urls: string[]): FeedsState {
     let disposed = false;
     let ctrl: AbortController | null = null;
     let timer: number | undefined;
-    /** Beginn des laufenden eigenen Abrufs, solange er unterwegs ist. */
+    /** Start of the own fetch in progress, while it is under way. */
     let inFlight: number | null = null;
 
-    /** Den gemeinsamen Stand übernehmen, wenn er neuer ist als der angezeigte. */
+    /** Apply the shared state when it is newer than the one shown. */
     const adopt = (shared: { feeds: FeedMap; at: number | null }) => {
       if (shared.at === null || (shownAtRef.current !== null && shared.at <= shownAtRef.current)) return;
       shownAtRef.current = shared.at;
@@ -167,7 +167,7 @@ export function useFeeds(urls: string[]): FeedsState {
       writeClaim({ at: started });
       setLoading(true);
       try {
-        // Bekannte Versionen mitschicken; nur für Feeds, deren Artikel wirklich vorliegen.
+        // Send known versions along; only for feeds whose articles are actually present.
         const versions: Record<string, string | undefined> = {};
         for (const u of list) {
           const f = feedsRef.current[u];
@@ -183,7 +183,7 @@ export function useFeeds(urls: string[]): FeedsState {
           return next;
         });
         setUpdatedAt(at);
-        // Vom gespeicherten Stand ausgehen: Andere Tabs schreiben ihn ebenfalls fort.
+        // Start from the stored state: other tabs update it as well.
         const nextHealth = pruneHealth(updateHealth(readHealth(), result.feeds, at), list);
         writeHealth(nextHealth);
         setHealth(nextHealth);
@@ -210,13 +210,13 @@ export function useFeeds(urls: string[]): FeedsState {
 
     const scheduleAt = (at: number) => {
       window.clearTimeout(timer);
-      // Etwas Streuung, damit gleichzeitig fällige Tabs nicht exakt zusammen abrufen.
+      // Some jitter, so tabs that are due at the same time do not fetch at exactly the same moment.
       const delay = Math.max(0, at - Date.now()) + Math.random() * 500;
       timer = window.setTimeout(tick, delay);
     };
 
     function tick() {
-      if (disposed || document.hidden) return; // beim Sichtbarwerden geht es weiter
+      if (disposed || document.hidden) return; // resumes when the tab becomes visible
       const shared = readCache();
       const decision = decidePoll({
         now: Date.now(),
@@ -239,7 +239,7 @@ export function useFeeds(urls: string[]): FeedsState {
       if (!document.hidden) tick();
     };
 
-    // Ein anderer Tab hat neue Daten gespeichert: übernehmen und den eigenen Abruf verschieben.
+    // Another tab stored new data: apply it and postpone the own fetch.
     const onStorage = (e: StorageEvent) => {
       if (e.key === HEALTH_KEY) setHealth(readHealth());
       if (e.key !== CACHE_KEY || !e.newValue) return;
@@ -254,8 +254,8 @@ export function useFeeds(urls: string[]): FeedsState {
       scheduleAt(Date.now() + REFRESH_INTERVAL);
     };
     refreshRef.current = refreshNow;
-    // Wird die Seite verlassen, während ein Abruf läuft, den Vermerk freigeben,
-    // damit die neu geladene Seite nicht auf ein Ergebnis wartet, das nie kommt.
+    // If the page is left while a fetch is running, release the claim,
+    // so the reloaded page does not wait for a result that never comes.
     const onPageHide = () => {
       if (inFlight !== null) releaseClaim(inFlight);
     };
@@ -264,7 +264,7 @@ export function useFeeds(urls: string[]): FeedsState {
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('storage', onStorage);
     window.addEventListener('pagehide', onPageHide);
-    // Wieder im Netz: nicht die Minute bis zum nächsten Versuch abwarten.
+    // Back online: do not wait out the minute until the next attempt.
     window.addEventListener('online', refreshNow);
 
     return () => {
@@ -284,7 +284,7 @@ export function useFeeds(urls: string[]): FeedsState {
   return { feeds, loading, error, updatedAt, health, refresh };
 }
 
-/** Liefert die aktuelle Zeit und aktualisiert sie regelmässig (für relative Zeitangaben). */
+/** Returns the current time and updates it regularly (for relative times). */
 export function useNow(intervalMs = 15_000): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {

@@ -13,18 +13,18 @@ const json = (body: unknown, status = 200, headers: Record<string, string> = {})
     headers: { 'Content-Type': 'application/json; charset=utf-8', 'X-Content-Type-Options': 'nosniff', ...headers },
   });
 
-/** Synthetischer Cache-Schlüssel pro Feed; so teilen sich alle Besucher denselben Abruf. */
+/** Synthetic cache key per feed; that way all visitors share the same fetch. */
 const cacheKey = (feedUrl: string) =>
   new Request(`https://feed-cache.newsdeck.invalid/v1?u=${encodeURIComponent(feedUrl)}`);
 
-/** Kurze Prüfsumme über den Feed-Inhalt (SHA-1, 12 Hex-Zeichen). */
+/** Short checksum of the feed content (SHA-1, 12 hex characters). */
 async function versionOf(feed: { title?: string; siteUrl?: string; articles: unknown[] }): Promise<string> {
   const data = new TextEncoder().encode(JSON.stringify([feed.title, feed.siteUrl, feed.articles]));
   const digest = new Uint8Array(await crypto.subtle.digest('SHA-1', data));
   return [...digest.subarray(0, 6)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-/** Hat der Browser diese Version schon, wird nur ein Platzhalter statt der Artikel gesendet. */
+/** If the browser already has this version, only a placeholder is sent instead of the articles. */
 function slim(result: FeedResult, known: string): FeedResult {
   if (!result.error && result.version && result.version === known) {
     return { feedUrl: result.feedUrl, version: result.version, unchanged: true, articles: [] };
@@ -49,7 +49,7 @@ async function loadFeed(
     const hit = await cache?.match(key);
     if (hit) return { ...((await hit.json()) as FeedResult), feedUrl: raw };
   } catch {
-    // Cache nicht verfügbar: einfach frisch laden
+    // Cache unavailable: simply load fresh
   }
 
   let result: FeedResult;
@@ -74,7 +74,7 @@ async function loadFeed(
 }
 
 export const handleFeeds: Handler = async (request, waitUntil) => {
-  // u = Feed-Adresse, v = dem Browser bekannte Version dieses Feeds (gleiche Position, optional).
+  // u = feed address, v = version of this feed known to the browser (same position, optional).
   const params = new URL(request.url).searchParams;
   const versions = params.getAll('v');
   const known = new Map<string, string>();

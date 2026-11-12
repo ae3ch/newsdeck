@@ -1,12 +1,12 @@
 #!/bin/sh
-# Erzeugt die App-Icons in public/icons aus dem Favicon. Braucht rsvg-convert (librsvg).
+# Creates the app icons in public/icons from the favicon. Requires rsvg-convert (librsvg).
 set -eu
 cd "$(dirname "$0")/.."
 out=public/icons
 mkdir -p "$out"
 
-# Vollflächige Fassung für iOS und «maskable»: Das System schneidet die Form selbst zu,
-# deshalb ohne runde Ecken und mit dem Zeichen in der sicheren Mitte.
+# Full-bleed version for iOS and «maskable»: the system crops the shape itself,
+# so no rounded corners and the mark sits in the safe center.
 full=$(mktemp)
 trap 'rm -f "$full"' EXIT
 cat > "$full" <<'SVG'

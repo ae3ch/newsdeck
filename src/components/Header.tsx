@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { BookmarkIcon, CloseIcon, Logo, MoonIcon, RefreshIcon, SearchIcon, SettingsIcon, SunIcon } from './icons';
 import { btnIcon as iconButton } from './ui';
 
-/** Breite Bildschirme mit Maus: Dort klappt die Suche beim Überfahren auf. */
+/** Wide screens with a mouse: there the search expands on hover. */
 const HOVER_SEARCH = '(min-width: 40rem) and (hover: hover) and (pointer: fine)';
 
 const timeFmt = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -16,18 +16,18 @@ interface Props {
   isDark: boolean;
   onToggleTheme: () => void;
   onRefresh: () => void;
-  /** true, solange nicht das Dashboard gezeigt wird (Anpassen, Einrichtung, Rechtstexte). */
+  /** true while something other than the dashboard is shown (customize, setup, legal texts). */
   inSetup: boolean;
   onToggleSetup: () => void;
   onHome: () => void;
   savedCount: number;
-  /** true, solange die Merkliste offen ist. */
+  /** true while the reading list is open. */
   inSaved: boolean;
   onOpenSaved: () => void;
 }
 
 export function Header(p: Props) {
-  // Auf schmalen Bildschirmen klappt die Suche als eigene Zeile auf; ab `sm` steht sie immer in der Leiste.
+  // On narrow screens the search expands as its own row; from `sm` on it always sits in the bar.
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -45,7 +45,7 @@ export function Header(p: Props) {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-bg/85 pt-[env(safe-area-inset-top)] backdrop-blur-md backdrop-saturate-150">
       <div className="page-x mx-auto flex max-w-[1440px] flex-wrap items-center gap-y-2 py-1.5 sm:gap-x-3 sm:py-3">
-        {/* Schmal: Name und Status übereinander neben dem Logo. Ab `sm`: nebeneinander. */}
+        {/* Narrow: name and status stacked next to the logo. From `sm` on: side by side. */}
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <a href="/" onClick={goHome} className="shrink-0" aria-label="Newsdeck home">
             <Logo />
@@ -60,7 +60,7 @@ export function Header(p: Props) {
             >
               Newsdeck
             </a>
-            {/* Angesagt werden nur Fehler; die Uhrzeit ändert sich jede Minute und wäre für Screenreader Lärm. */}
+            {/* Only errors are announced; the time changes every minute and would be noise for screen readers. */}
             <span className="sr-only" role="status">
               {p.error ?? ''}
             </span>
@@ -83,7 +83,7 @@ export function Header(p: Props) {
                   'Loading news …'
                 )}
               </span>
-              {/* Erscheint beim Überfahren der Uhrzeit sofort, ohne die Verzögerung eines title-Attributs. */}
+              {/* Appears at once when hovering the time, without the delay of a title attribute. */}
               {!p.error && p.updatedAt && (
                 <span
                   role="tooltip"
@@ -97,10 +97,10 @@ export function Header(p: Props) {
         </div>
 
         {!p.inSetup && (
-          // Schmal: eigene Zeile, die das Symbol in der Leiste auf- und zuklappt.
-          // Ab `sm`: nur das Symbol. Beim Überfahren klappt das Feld über die Leiste nach links auf
-          // (ohne die Nachbarn zu verschieben) und erhält den Fokus. Es bleibt offen, solange es einen
-          // Suchbegriff enthält oder per Tastatur fokussiert wurde.
+          // Narrow: its own row, which the icon in the bar expands and collapses.
+          // From `sm` on: only the icon. On hover the field expands over the bar to the left
+          // (without pushing its neighbors) and receives focus. It stays open while it holds a
+          // search term or was focused with the keyboard.
           <label
             className={`group/search relative order-last w-full sm:order-none sm:-mr-2 sm:block sm:h-9 sm:w-9 ${showSearch ? 'block' : 'hidden'}`}
             onMouseEnter={() => {
