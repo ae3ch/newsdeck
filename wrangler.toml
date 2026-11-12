@@ -9,3 +9,8 @@ directory = "./dist"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
 run_worker_first = ["/api/*"]
+
+# Workers Logs: jede Anfrage erscheint im Dashboard unter Workers & Pages → newsdeck → Logs.
+[observability.logs]
+enabled = true
+invocation_logs = true
