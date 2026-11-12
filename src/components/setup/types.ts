@@ -9,6 +9,8 @@ export interface SetupActions {
   onShift: (id: string, delta: -1 | 1) => void;
   onRemove: (id: string) => void;
   onAdd: (source: NewSource) => void;
+  /** Ersetzt die Feed-Adresse einer Quelle (z. B. nach einem Umzug des Feeds). */
+  onReplaceFeed: (id: string, feedUrl: string) => void;
   onSettings: (patch: Partial<Settings>) => void;
   onReplace: (config: DashboardConfig) => void;
   onReset: () => void;

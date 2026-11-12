@@ -9,6 +9,13 @@ import {
 
 const REQUEST_TIMEOUT = 25_000;
 
+/** Fehler einer API-Anfrage mit HTTP-Status (0 = keine Antwort). */
+export class ApiError extends Error {
+  constructor(readonly status: number) {
+    super(status ? `HTTP ${status}` : 'Network error');
+  }
+}
+
 async function getJson<T>(url: string, signal?: AbortSignal): Promise<T> {
   const ctrl = new AbortController();
   const onAbort = () => ctrl.abort();
@@ -16,7 +23,7 @@ async function getJson<T>(url: string, signal?: AbortSignal): Promise<T> {
   const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT);
   try {
     const res = await fetch(url, { signal: ctrl.signal, headers: { Accept: 'application/json' } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) throw new ApiError(res.status);
     return (await res.json()) as T;
   } finally {
     clearTimeout(timer);
@@ -58,7 +65,10 @@ export async function fetchFeeds(
     if (r.status === 'fulfilled' && Array.isArray(r.value.feeds)) feeds.push(...r.value.feeds);
     else failed++;
   }
-  if (failed === batches.length && batches.length > 0) throw new Error('Feeds could not be loaded');
+  if (failed === batches.length && batches.length > 0) {
+    const first = settled.find((r) => r.status === 'rejected');
+    throw first && first.reason instanceof ApiError ? first.reason : new ApiError(0);
+  }
   return { feeds, partial: failed > 0 };
 }
 

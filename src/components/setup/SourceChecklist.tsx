@@ -11,9 +11,11 @@ interface Props {
   collapsible?: boolean;
   onToggle: (id: string) => void;
   onSetMany: (ids: string[], enabled: boolean) => void;
+  /** Feed-Adressen, die seit über einem Tag nicht laden. */
+  brokenFeeds?: Set<string>;
 }
 
-function Rows({ members, onToggle }: { members: Source[]; onToggle: (id: string) => void }) {
+function Rows({ members, onToggle, brokenFeeds }: { members: Source[]; onToggle: (id: string) => void; brokenFeeds?: Set<string> }) {
   return (
     <ul className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
       {members.map((s) => (
@@ -22,6 +24,7 @@ function Rows({ members, onToggle }: { members: Source[]; onToggle: (id: string)
             <input type="checkbox" checked={s.enabled} onChange={() => onToggle(s.id)} className="h-4 w-4 shrink-0 accent-(--accent)" />
             <Favicon siteUrl={s.siteUrl} name={s.name} size={16} />
             <span className={`min-w-0 flex-1 truncate text-sm ${s.enabled ? 'font-medium' : 'text-muted'}`}>{s.name}</span>
+            {brokenFeeds?.has(s.feedUrl) && <span className="shrink-0 text-xs text-danger">Not loading</span>}
             {s.lang && (
               <span className="shrink-0 font-mono text-[10px] uppercase text-muted" title={s.lang === 'de' ? 'German' : 'English'}>
                 {s.lang}
@@ -35,7 +38,7 @@ function Rows({ members, onToggle }: { members: Source[]; onToggle: (id: string)
 }
 
 /** Quellen je Thema mit Häkchen zum einzelnen Ein- und Ausschalten. */
-export function SourceChecklist({ sources, categoryIds, collapsible = false, onToggle, onSetMany }: Props) {
+export function SourceChecklist({ sources, categoryIds, collapsible = false, onToggle, onSetMany, brokenFeeds }: Props) {
   const cats = CATEGORIES.filter((c) => !categoryIds || categoryIds.includes(c.id));
   return (
     <div className={collapsible ? 'divide-y divide-line rounded-lg border border-line' : 'space-y-6'}>
@@ -75,7 +78,7 @@ export function SourceChecklist({ sources, categoryIds, collapsible = false, onT
                   <p className="text-xs text-muted">{cat.description}</p>
                   {bulk}
                 </div>
-                <Rows members={members} onToggle={onToggle} />
+                <Rows members={members} onToggle={onToggle} brokenFeeds={brokenFeeds} />
               </div>
             </details>
           );
@@ -87,7 +90,7 @@ export function SourceChecklist({ sources, categoryIds, collapsible = false, onT
               {count}
               <span className="ml-auto">{bulk}</span>
             </div>
-            <Rows members={members} onToggle={onToggle} />
+            <Rows members={members} onToggle={onToggle} brokenFeeds={brokenFeeds} />
           </section>
         );
       })}

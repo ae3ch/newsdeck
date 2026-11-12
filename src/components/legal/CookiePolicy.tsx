@@ -23,6 +23,16 @@ const ENTRIES: { key: string; purpose: string; kept: string }[] = [
     kept: 'Limited to the 2,000 most recent entries; removed when you clear site data.',
   },
   {
+    key: 'tech-news:saved',
+    purpose: 'Articles you saved for later: headline, link, preview image address, source and the time you saved it.',
+    kept: 'Until you remove them; limited to 500 entries; removed when you clear site data.',
+  },
+  {
+    key: 'tech-news:health',
+    purpose: 'For sources that fail to load: since when and the last error, so a source that has been broken for a day can be pointed out.',
+    kept: 'Removed as soon as the source loads again or is switched off; removed when you clear site data.',
+  },
+  {
     key: 'tech-news:og',
     purpose: 'Preview image addresses that have already been looked up, so they are not requested again.',
     kept: 'Limited to the 1,500 most recent entries; removed when you clear site data.',
@@ -74,7 +84,7 @@ export function CookiePolicy() {
         </div>
         <P>
           All of them are needed for functions you use directly (your personal layout, fast loading and the read
-          markers). None of them identifies you, and none is shared with third parties.
+          markers, saved articles and source checks). None of them identifies you, and none is shared with third parties.
         </P>
         <P>
           In addition, your browser keeps a copy of the site's own files (the page, its scripts, styles and icons) in

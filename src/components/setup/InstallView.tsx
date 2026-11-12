@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { encodeInstallHash, isVisible, type DashboardConfig } from '../../lib/config';
 import { isAndroid, isIos, useInstallPrompt } from '../../lib/install';
 import { ShareIcon } from '../icons';
+import { QrCode } from '../QrCode';
 import { primaryButton, textButton } from './types';
 
 interface Props {
@@ -92,8 +93,8 @@ export function InstallView({ config, pending, adopted, onDone }: Props) {
         ) : (
           <>
             <Steps>
-              <li>Send the link below to your phone or tablet and open it there.</li>
-              <li>The page then shows the steps for that device.</li>
+              <li>Scan the QR code below with your phone's camera, or send yourself the link.</li>
+              <li>The page opens there with your layout and shows the steps for that device.</li>
             </Steps>
             {install && (
               <button type="button" className={`${textButton} mt-4`} onClick={install}>
@@ -108,23 +109,31 @@ export function InstallView({ config, pending, adopted, onDone }: Props) {
         <h2 id="install-link" className="text-base font-semibold">
           Your home-screen link
         </h2>
-        <p className="mt-1 text-sm text-muted">Use it to set up another device with the same layout.</p>
-        <input
-          readOnly
-          value={url}
-          aria-label="Home-screen link"
-          onFocus={(e) => e.target.select()}
-          className="mt-3 h-10 w-full rounded-lg border border-line bg-bg px-3 font-mono text-xs text-muted"
-        />
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button type="button" className={textButton} onClick={copy}>
-            Copy link
-          </button>
-          {typeof navigator.share === 'function' && (
-            <button type="button" className={textButton} onClick={share}>
-              Share …
-            </button>
-          )}
+        <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:gap-5">
+          <QrCode value={url} label="QR code of the home-screen link" />
+          <div className="w-full min-w-0 flex-1">
+            <p className="text-sm text-muted">
+              Scan it with the camera of another phone or tablet to open Newsdeck there with the same layout, or copy
+              the link.
+            </p>
+            <input
+              readOnly
+              value={url}
+              aria-label="Home-screen link"
+              onFocus={(e) => e.target.select()}
+              className="mt-3 h-10 w-full rounded-lg border border-line bg-bg px-3 font-mono text-xs text-muted"
+            />
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button type="button" className={textButton} onClick={copy}>
+                Copy link
+              </button>
+              {typeof navigator.share === 'function' && (
+                <button type="button" className={textButton} onClick={share}>
+                  Share …
+                </button>
+              )}
+            </div>
+          </div>
         </div>
         {notice && (
           <p className="mt-3 text-sm text-muted" role="status">

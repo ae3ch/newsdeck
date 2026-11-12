@@ -6,12 +6,17 @@ import { CategoryTiles } from './CategoryTiles';
 import { CustomSources } from './CustomSources';
 import { DisplaySettings } from './DisplaySettings';
 import { LanguagePicker } from './LanguagePicker';
+import { MutedWords } from './MutedWords';
 import { OrderList } from './OrderList';
 import { SourceChecklist } from './SourceChecklist';
+import { SourceHealth, type BrokenSource } from './SourceHealth';
 import { primaryButton, textButton, type SetupActions } from './types';
 
 interface Props extends SetupActions {
   config: DashboardConfig;
+  /** Aktive Quellen, die seit über einem Tag nicht laden. */
+  broken: BrokenSource[];
+  now: number;
   onStartOnboarding: () => void;
   /** Öffnet die Seite mit dem Homescreen-Link. */
   onInstall: () => void;
@@ -31,8 +36,9 @@ function Section({ id, title, hint, children }: { id: string; title: string; hin
 }
 
 /** Die Anpassen-Seite: alle Einstellungen auf einen Blick, ohne Führung. */
-export function CustomizeView({ config, onStartOnboarding, onInstall, onDone, ...actions }: Props) {
+export function CustomizeView({ config, broken, now, onStartOnboarding, onInstall, onDone, ...actions }: Props) {
   const { settings } = config;
+  const brokenFeeds = new Set(broken.map((b) => b.source.feedUrl));
   // Katalog nach Sprachwahl gefiltert; nur diese Quellen werden angeboten und gezählt.
   const sources = visibleSources(config);
   const active = sources.filter((s) => s.enabled).length;
@@ -50,6 +56,14 @@ export function CustomizeView({ config, onStartOnboarding, onInstall, onDone, ..
           Back to dashboard
         </button>
       </div>
+
+      <SourceHealth
+        broken={broken}
+        now={now}
+        onToggle={actions.onToggle}
+        onRemove={actions.onRemove}
+        onReplaceFeed={actions.onReplaceFeed}
+      />
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-dashed border-line px-4 py-4 sm:px-5">
         <p className="min-w-0 flex-1 basis-64 text-sm text-muted">
@@ -74,7 +88,13 @@ export function CustomizeView({ config, onStartOnboarding, onInstall, onDone, ..
       </Section>
 
       <Section id="sec-sources" title="Sources by topic" hint="Expand a topic to switch individual sites on or off.">
-        <SourceChecklist sources={sources} collapsible onToggle={actions.onToggle} onSetMany={actions.onSetMany} />
+        <SourceChecklist
+          sources={sources}
+          collapsible
+          onToggle={actions.onToggle}
+          onSetMany={actions.onSetMany}
+          brokenFeeds={brokenFeeds}
+        />
       </Section>
 
       <Section
@@ -82,7 +102,18 @@ export function CustomizeView({ config, onStartOnboarding, onInstall, onDone, ..
         title="Custom sources"
         hint="Enter the address of a news site or an RSS/Atom feed. The feed is detected automatically."
       >
-        <CustomSources sources={config.sources} onAdd={actions.onAdd} onToggle={actions.onToggle} onRemove={actions.onRemove} />
+        <CustomSources
+          sources={config.sources}
+          onAdd={actions.onAdd}
+          onToggle={actions.onToggle}
+          onRemove={actions.onRemove}
+          brokenFeeds={brokenFeeds}
+          opml={{ config, onReplace: actions.onReplace }}
+        />
+      </Section>
+
+      <Section id="sec-muted" title="Muted words" hint="Headlines containing these words or phrases are hidden from your dashboard.">
+        <MutedWords words={settings.mutedWords} onChange={(mutedWords) => actions.onSettings({ mutedWords })} />
       </Section>
 
       <Section

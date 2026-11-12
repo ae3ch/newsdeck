@@ -1,3 +1,4 @@
+import { deflateSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import { CATEGORIES, DEFAULT_SOURCES } from '../src/data/defaultSources';
 import {
@@ -60,6 +61,7 @@ describe('Konfiguration', () => {
       showTopStories: true,
       showImages: true,
       languages: ['de', 'en'],
+      mutedWords: [],
     });
   });
 
@@ -78,9 +80,10 @@ describe('Konfiguration', () => {
     const cfg = normalizeConfig({
       version: 2,
       sources: [custom, { id: 'zdnet', enabled: false }, { id: 'heise' }],
-      settings: { theme: 'dark', articlesPerCard: 12, showTopStories: false, languages: ['en'] },
+      settings: { theme: 'dark', articlesPerCard: 12, showTopStories: false, languages: ['en'], mutedWords: ['Deal', ' deal '] },
     });
     expect(cfg.settings.articlesPerCard).toBe(12);
+    expect(cfg.settings.mutedWords).toEqual(['Deal']);
     expect(importConfig(exportConfig(cfg))).toEqual(cfg);
     expect(decodeShareHash(encodeShareHash(cfg))).toEqual(cfg);
     expect(decodeShareHash('#etwas-anderes')).toBeNull();
@@ -94,7 +97,7 @@ describe('Konfiguration', () => {
     expect(defaultConfig().settings.articlesPerCard).toBe(4);
   });
 
-  it('Homescreen-Link trägt Quellen, Reihenfolge und Darstellung und bleibt kürzer als der Share-Link', () => {
+  it('Homescreen-Link trägt Quellen, Reihenfolge und Darstellung', () => {
     const cfg = normalizeConfig({
       version: 2,
       sources: [{ id: 'krebs' }, { ...custom, enabled: false }, { id: 'heise', enabled: false }, { id: 'golem' }],
@@ -107,7 +110,6 @@ describe('Konfiguration', () => {
     // Abgewählte Katalogquellen reisen nicht mit, kommen aber abgewählt wieder an.
     expect(new Map(back.sources.map((s) => [s.id, s.enabled]))).toEqual(new Map(cfg.sources.map((s) => [s.id, s.enabled])));
     expect(sameLayout(back, cfg)).toBe(true);
-    expect(hash.length).toBeLessThan(encodeShareHash(cfg).length / 2);
 
     const moved = { ...cfg, sources: [cfg.sources[3], ...cfg.sources.slice(0, 3), ...cfg.sources.slice(4)] };
     expect(sameLayout(moved, cfg)).toBe(false);
@@ -115,6 +117,36 @@ describe('Konfiguration', () => {
     expect(decodeInstallHash(encodeShareHash(cfg))).toBeNull();
     expect(decodeShareHash(hash)).toBeNull();
     expect(decodeInstallHash('#install=%%%kaputt')).toBeNull();
+  });
+
+  it('Links bleiben kurz genug für einen QR-Code', () => {
+    // Ein QR-Code fasst höchstens 2953 Zeichen; gut lesbar bleibt er deutlich darunter.
+    const base = 'https://newsdeck.example.workers.dev/';
+    expect((base + encodeShareHash(defaultConfig())).length).toBeLessThan(500);
+    const customs = Array.from({ length: 10 }, (_, i) => ({
+      id: `c-abcd12${i}`,
+      name: `Some Custom Blog ${i}`,
+      siteUrl: `https://blog${i}.example.com/`,
+      feedUrl: `https://blog${i}.example.com/feed.xml`,
+    }));
+    const big = normalizeConfig({ version: 2, sources: [...customs, ...DEFAULT_SOURCES.map((d) => ({ id: d.id }))] });
+    for (const link of [encodeShareHash(big), encodeInstallHash(big)]) {
+      expect((base + link).length).toBeLessThan(1500);
+    }
+    expect(sameLayout(decodeShareHash(encodeShareHash(big))!, big)).toBe(true);
+  });
+
+  it('liest unkomprimierte Links der ersten Fassung und weist übergrosse ab', () => {
+    const b64url = (bytes: Uint8Array) =>
+      btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const legacy = (prefix: string, data: unknown) => prefix + b64url(new TextEncoder().encode(JSON.stringify(data)));
+    const data = { version: 2, sources: [custom, { id: 'heise' }], settings: { theme: 'dark' } };
+    expect(decodeShareHash(legacy('#layout=', data))!.sources[0].name).toBe('Mein Blog');
+    expect(decodeInstallHash(legacy('#install=', data))!.settings.theme).toBe('dark');
+    // 1 MB Leerzeichen, komprimiert nur wenige hundert Byte: wird nicht entpackt.
+    const bomb = '#layout=1.' + b64url(deflateSync(new Uint8Array(1_000_000).fill(32)));
+    expect(bomb.length).toBeLessThan(5000);
+    expect(decodeShareHash(bomb)).toBeNull();
   });
 
   it('Katalog: jede Quelle gehört zu einer bekannten Kategorie, jede Kategorie hat Quellen', () => {

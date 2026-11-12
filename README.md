@@ -3,6 +3,7 @@
 **A self-hosted tech news dashboard.** Pick your own RSS and Atom feeds, read them in one place on desktop or phone, refreshed every minute. No account, no database, no tracking. Deploys for free to Cloudflare Workers in one click.
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/ae3ch/newsdeck)
+[![CI](https://github.com/ae3ch/newsdeck/actions/workflows/ci.yml/badge.svg)](https://github.com/ae3ch/newsdeck/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 <picture>
@@ -24,11 +25,14 @@
 - **Your sources, your order.** A catalogue of 78 tech news sites in English and German across 13 topics (security, development, AI, Apple, Android, Linux, hardware and more), plus any site you add yourself. The feed is detected from a plain website address.
 - **Top stories of the day.** Headlines that several of your sources cover are grouped and ranked first.
 - **Built for phones.** Responsive layout, swipeable top stories, topic filter, large tap targets, safe-area support for notches.
-- **Add to home screen.** Installable as a web app on Android, iOS and desktop. A generated link carries your layout, so the home-screen icon opens with exactly your sources, including custom ones.
+- **Add to home screen.** Installable as a web app on Android, iOS and desktop. A generated link, also shown as a QR code to scan with your phone, carries your layout, so the home-screen icon opens with exactly your sources, including custom ones.
 - **Works offline.** The app shell is cached by a service worker; without a connection you still see the last loaded headlines.
-- **Read markers.** Opened articles are dimmed, also inside the home-screen app.
+- **Read markers and a reading list.** Opened articles are dimmed, also inside the home-screen app. Save any headline for later with the bookmark next to it.
+- **Muted words.** Hide headlines that contain words or phrases you are not interested in.
+- **OPML import and export.** Bring your feeds over from another reader in one go, or take them with you.
+- **Broken source alerts.** Sources that have not loaded for a day are pointed out, with a one-click search for the site's current feed.
 - **Light and dark theme**, search across all headlines, drag and drop to reorder cards, four articles per card with "show more".
-- **Private by design.** Your layout lives in your browser's local storage. Move it to another device with a file or a link; nothing is stored on the server.
+- **Private by design.** Your layout lives in your browser's local storage. Move it to another device with a file, a link or a QR code; nothing is stored on the server.
 - **Light on data.** Feeds are fetched once per minute for all open tabs, only changed feeds are transferred, preview images are resized and only loaded for visible articles.
 
 ## Deploy your own
@@ -57,6 +61,21 @@ Requires Node.js 22.12 or later.
 
 The site includes a privacy policy, a cookie policy and terms of service. Fill in `operator`, `contactEmail` and `jurisdiction` in [`src/data/site.ts`](src/data/site.ts) so these pages name you as the operator; until then they use generic wording. Review the texts for your jurisdiction.
 
+### Protecting a public instance
+
+The API under `/api/*` only answers requests from the site itself (checked with the `Sec-Fetch-Site` and `Referer` headers), so other websites cannot use your instance and its free quota. Scripts can fake these headers. To also cap requests per visitor, add a rate limit to `wrangler.toml`:
+
+```toml
+[[ratelimits]]
+name = "API_LIMITER"
+namespace_id = "1001"
+  [ratelimits.simple]
+  limit = 120
+  period = 60
+```
+
+The Worker uses it automatically when it is present (requests per IP address and minute, counted per Cloudflare location). It is not enabled by default because Cloudflare does not document whether the binding is available on the free plan and through the deploy button.
+
 ### Cost and limits
 
 Newsdeck runs on the Cloudflare Workers free plan:
@@ -82,6 +101,7 @@ Browser (static React app)
 | `worker/api/discover.ts` | Finds the feed behind a website address. |
 | `worker/api/og.ts` | Looks up the preview image (`og:image`) for articles whose feed has none. |
 | `worker/_lib/safeFetch.ts` | Allows only public http(s) addresses, with time and size limits. |
+| `worker/_lib/origin.ts` | Lets only the site itself call the API. |
 | `src/sw.js` | Service worker for offline start, generated into the build with its file list. |
 | `src/data/defaultSources.ts` | Topic list and source catalogue. |
 

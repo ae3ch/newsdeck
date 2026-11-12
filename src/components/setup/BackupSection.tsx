@@ -1,5 +1,6 @@
 import { useRef, useState, type ChangeEvent } from 'react';
 import { encodeShareHash, exportConfig, importConfig, type DashboardConfig } from '../../lib/config';
+import { QrCode } from '../QrCode';
 import { textButton } from './types';
 
 interface Props {
@@ -73,13 +74,22 @@ export function BackupSection({ config, onReplace, onReset }: Props) {
         <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={onFile} />
       </div>
       {shareUrl && (
-        <input
-          readOnly
-          value={shareUrl}
-          aria-label="Link to this layout"
-          onFocus={(e) => e.target.select()}
-          className="mt-3 h-9 w-full rounded-lg border border-line bg-bg px-3 font-mono text-xs text-muted"
-        />
+        <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:gap-5">
+          <QrCode value={shareUrl} label="QR code of the link to this layout" />
+          <div className="w-full min-w-0 flex-1">
+            <p className="text-sm text-muted">
+              Scan the code with another device to open this layout there, or copy the link. The device asks before it
+              replaces its own layout.
+            </p>
+            <input
+              readOnly
+              value={shareUrl}
+              aria-label="Link to this layout"
+              onFocus={(e) => e.target.select()}
+              className="mt-3 h-10 w-full rounded-lg border border-line bg-bg px-3 font-mono text-xs text-muted sm:h-9"
+            />
+          </div>
+        </div>
       )}
       {notice && (
         <p className="mt-3 text-sm text-muted" role="status">

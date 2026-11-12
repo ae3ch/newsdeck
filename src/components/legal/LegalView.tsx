@@ -3,14 +3,8 @@ import { SITE } from '../../data/site';
 import { CookiePolicy } from './CookiePolicy';
 import { PrivacyPolicy } from './PrivacyPolicy';
 import { TermsOfService } from './TermsOfService';
+import { LEGAL_DOCS, type LegalDoc } from './docs';
 
-export type LegalDoc = 'privacy' | 'cookies' | 'terms';
-
-export const LEGAL_DOCS: { id: LegalDoc; title: string }[] = [
-  { id: 'privacy', title: 'Privacy Policy' },
-  { id: 'cookies', title: 'Cookie Policy' },
-  { id: 'terms', title: 'Terms of Service' },
-];
 
 const BODY: Record<LegalDoc, () => ReactNode> = {
   privacy: PrivacyPolicy,

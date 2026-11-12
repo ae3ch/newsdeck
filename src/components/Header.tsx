@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react';
-import { CloseIcon, Logo, MoonIcon, RefreshIcon, SearchIcon, SettingsIcon, SunIcon } from './icons';
+import { BookmarkIcon, CloseIcon, Logo, MoonIcon, RefreshIcon, SearchIcon, SettingsIcon, SunIcon } from './icons';
 
 const timeFmt = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
@@ -16,6 +16,10 @@ interface Props {
   inSetup: boolean;
   onToggleSetup: () => void;
   onHome: () => void;
+  savedCount: number;
+  /** true, solange die Merkliste offen ist. */
+  inSaved: boolean;
+  onOpenSaved: () => void;
 }
 
 const iconButton =
@@ -112,12 +116,27 @@ export function Header(p: Props) {
               {showSearch ? <CloseIcon /> : <SearchIcon />}
             </button>
           )}
+          <button
+            type="button"
+            className={`${iconButton} relative ${p.inSaved ? 'text-accent' : ''}`}
+            onClick={p.onOpenSaved}
+            aria-label={`Saved for later (${p.savedCount})`}
+            aria-current={p.inSaved ? 'page' : undefined}
+            title="Saved for later"
+          >
+            <BookmarkIcon filled={p.inSaved} />
+            {p.savedCount > 0 && (
+              <span className="absolute right-0.5 top-0.5 min-w-4 rounded-full bg-accent px-1 text-center font-mono text-[10px] font-semibold leading-4 text-accent-ink">
+                {p.savedCount > 99 ? '99+' : p.savedCount}
+              </span>
+            )}
+          </button>
           <button type="button" className={iconButton} onClick={p.onRefresh} aria-label="Refresh now" title="Refresh now">
             <RefreshIcon style={p.loading ? { animation: 'spin-slow 1s linear infinite' } : undefined} />
           </button>
           <button
             type="button"
-            className={iconButton}
+            className={`${iconButton} max-sm:hidden`}
             onClick={p.onToggleTheme}
             aria-label={p.isDark ? 'Light theme' : 'Dark theme'}
             title={p.isDark ? 'Light theme' : 'Dark theme'}

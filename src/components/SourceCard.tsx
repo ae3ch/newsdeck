@@ -4,6 +4,7 @@ import { categoryLabel } from '../data/defaultSources';
 import type { Source } from '../lib/config';
 import { isSafeLink, relativeTime } from '../lib/format';
 import { Favicon } from './Favicon';
+import { SaveButton } from './SaveButton';
 import { SmartImage } from './SmartImage';
 import { ExternalIcon, GripIcon } from './icons';
 
@@ -20,6 +21,8 @@ interface Props {
   onLess: (sourceId: string) => void;
   isRead: (link: string) => boolean;
   onRead: (link: string) => void;
+  isSaved: (link: string) => boolean;
+  onSave: (article: Article, source: Source) => void;
   now: number;
   filtered: boolean;
   showImages: boolean;
@@ -126,7 +129,7 @@ export const SourceCard = memo(function SourceCard(p: Props) {
       ) : (
         <ol className="divide-y divide-line">
           {visible.map((a) => (
-            <li key={a.link}>
+            <li key={a.link} className="group/row flex transition-colors hover:bg-sunken">
               <a
                 href={a.link}
                 target="_blank"
@@ -134,7 +137,7 @@ export const SourceCard = memo(function SourceCard(p: Props) {
                 title={a.description || undefined}
                 onClick={() => p.onRead(a.link)}
                 onAuxClick={() => p.onRead(a.link)}
-                className="group flex gap-3 px-4 py-3 transition-colors hover:bg-sunken sm:py-2.5"
+                className="group flex min-w-0 flex-1 gap-3 py-3 pl-4 sm:py-2.5"
               >
                 {p.showImages && <Thumb src={a.image} name={p.source.name} />}
                 <span className="min-w-0 flex-1">
@@ -152,6 +155,15 @@ export const SourceCard = memo(function SourceCard(p: Props) {
                   )}
                 </span>
               </a>
+              {/* Mit Maus erst beim Überfahren sichtbar, auf Touch-Geräten immer. */}
+              <SaveButton
+                saved={p.isSaved(a.link)}
+                title={a.title}
+                onToggle={() => p.onSave(a, p.source)}
+                className={`mt-1.5 h-10 w-11 sm:mt-1 sm:h-8 sm:w-10 ${
+                  p.isSaved(a.link) ? '' : 'pointer-fine:opacity-0 pointer-fine:group-hover/row:opacity-100 focus-visible:opacity-100'
+                }`}
+              />
             </li>
           ))}
         </ol>

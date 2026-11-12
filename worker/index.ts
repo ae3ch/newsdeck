@@ -1,4 +1,5 @@
 import type { Handler } from './_lib/handler';
+import { isSameOrigin } from './_lib/origin';
 import { handleDiscover } from './api/discover';
 import { handleFeeds } from './api/feeds';
 import { handleOg } from './api/og';
@@ -6,6 +7,11 @@ import { handleOg } from './api/og';
 interface Env {
   /** Die gebaute Seite aus dist/, siehe [assets] in wrangler.toml. */
   ASSETS: Fetcher;
+  /**
+   * Optional: Mengenbegrenzung je IP-Adresse. Nicht standardmässig eingerichtet, weil Cloudflare nicht
+   * dokumentiert, ob das Binding im Free-Plan und über den Deploy-Button verfügbar ist; siehe README.
+   */
+  API_LIMITER?: RateLimit;
 }
 
 const ROUTES: Record<string, Handler> = {
@@ -33,6 +39,13 @@ export default {
     }
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       return jsonError(405, 'Method not allowed', { Allow: 'GET, HEAD' });
+    }
+    // Nur die eigene Seite darf die API nutzen; sonst könnten Fremde das Kontingent aufbrauchen.
+    if (!isSameOrigin(request)) return jsonError(403, 'Forbidden');
+    if (env.API_LIMITER) {
+      const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+      const { success } = await env.API_LIMITER.limit({ key: ip });
+      if (!success) return jsonError(429, 'Too many requests', { 'Retry-After': '60' });
     }
     return handler(request, (promise) => ctx.waitUntil(promise));
   },

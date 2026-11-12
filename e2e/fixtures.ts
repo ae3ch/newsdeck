@@ -3,6 +3,8 @@ import { test as base } from '@playwright/test';
 /** Zwanzig Artikel ohne Bild für einen Feed; Titel und Adressen leiten sich vom Hostnamen ab. */
 function feed(feedUrl: string) {
   const host = new URL(feedUrl).hostname.replace(/^www\./, '');
+  // Feeds unter broken.* laden nie (für den Hinweis auf fehlerhafte Quellen).
+  if (host.startsWith('broken.')) return { feedUrl, articles: [], error: 'HTTP 404' };
   const articles = Array.from({ length: 20 }, (_, i) => ({
     title: `${host} headline ${i + 1}`,
     link: `https://${host}/article-${i + 1}`,

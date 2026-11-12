@@ -66,8 +66,9 @@ export function PrivacyPolicy() {
       <Section title="5. Data stored in your browser">
         <P>
           Your layout (chosen sources, their order, custom sources, language and appearance settings), the most recently
-          loaded headlines, the preview image addresses already looked up and a marker for each article you have
-          opened are stored in your browser's local storage. This data stays on your device; we cannot read it. It is only used by the site running in your
+          loaded headlines, the preview image addresses already looked up, a marker for each article you have
+          opened, the articles you saved for later and the load errors of failing sources are stored in your browser's
+          local storage. This data stays on your device; we cannot read it. It is only used by the site running in your
           browser. The <Int to="cookies">Cookie Policy</Int> lists every entry and explains how to delete it.
         </P>
       </Section>

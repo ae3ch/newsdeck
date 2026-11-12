@@ -1,6 +1,7 @@
 import { relativeTime } from '../lib/format';
 import type { Story } from '../lib/topStories';
 import { Favicon } from './Favicon';
+import { SaveButton } from './SaveButton';
 import { SmartImage } from './SmartImage';
 
 function StoryImage({ story }: { story: Story }) {
@@ -24,9 +25,11 @@ interface Props {
   now: number;
   isRead: (link: string) => boolean;
   onRead: (link: string) => void;
+  isSaved: (link: string) => boolean;
+  onSave: (story: Story) => void;
 }
 
-export function TopStories({ stories, now, isRead, onRead }: Props) {
+export function TopStories({ stories, now, isRead, onRead, isSaved, onSave }: Props) {
   if (stories.length === 0) return null;
   return (
     <section aria-labelledby="top-stories" className="mb-8 sm:mb-10">
@@ -39,51 +42,67 @@ export function TopStories({ stories, now, isRead, onRead }: Props) {
       {/* Schmal: Leiste zum seitlichen Wischen bis an den Bildschirmrand, die nächste Karte schaut hervor. Ab `sm`: Raster. */}
       <div className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden">
         {stories.map((story) => (
-          <a
-            key={story.article.link}
-            href={story.article.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => onRead(story.article.link)}
-            onAuxClick={() => onRead(story.article.link)}
-            className="group flex w-[85%] shrink-0 snap-start gap-3 rounded-xl border border-line bg-surface p-2.5 transition-colors hover:border-accent sm:w-auto"
-          >
-            <div className="relative aspect-[4/3] w-28 shrink-0 overflow-hidden rounded-lg sm:w-32">
-              <StoryImage story={story} />
-              {/* Schmal: Zahl der Quellen als kleine Marke auf dem Bild, damit der Titel den Platz behält. */}
-              {story.coveredBy.length > 1 && (
-                <span
-                  aria-label={`Covered by ${story.coveredBy.length} sources`}
-                  className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 font-mono text-[10px] font-semibold leading-none text-white sm:hidden"
-                >
-                  {story.coveredBy.length} sources
-                </span>
-              )}
-            </div>
-            <div className="flex min-w-0 flex-col py-0.5">
-              <div className="mb-1.5 flex items-center gap-1.5 text-xs text-muted">
-                <Favicon siteUrl={story.source.siteUrl} name={story.source.name} size={14} />
-                <span className="truncate font-medium">{story.source.name}</span>
-                <span aria-hidden="true">·</span>
-                <span className="shrink-0">{relativeTime(story.article.pubDate, now)}</span>
+          <div key={story.article.link} className="group/story relative w-[85%] shrink-0 snap-start sm:w-auto">
+            <a
+              href={story.article.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => onRead(story.article.link)}
+              onAuxClick={() => onRead(story.article.link)}
+              className="group flex h-full gap-3 rounded-xl border border-line bg-surface p-2.5 transition-colors hover:border-accent sm:pr-10"
+            >
+              <div className="relative aspect-[4/3] w-28 shrink-0 overflow-hidden rounded-lg sm:w-32">
+                <StoryImage story={story} />
+                {/* Schmal: Zahl der Quellen als kleine Marke auf dem Bild, damit der Titel den Platz behält. */}
+                {story.coveredBy.length > 1 && (
+                  <span
+                    aria-label={`Covered by ${story.coveredBy.length} sources`}
+                    className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 font-mono text-[10px] font-semibold leading-none text-white sm:hidden"
+                  >
+                    {story.coveredBy.length} sources
+                  </span>
+                )}
               </div>
-              <h3
-                className={`line-clamp-4 text-[15px] font-semibold leading-snug group-hover:text-accent sm:line-clamp-3 sm:text-sm ${
-                  isRead(story.article.link) ? 'text-muted' : ''
-                }`}
-              >
-                {story.article.title}
-              </h3>
-              {story.coveredBy.length > 1 && (
-                <p
-                  className="mt-auto hidden pt-1.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-accent sm:block"
-                  title={`Also covered by: ${story.coveredBy.filter((n) => n !== story.source.name).join(', ')}`}
+              <div className="flex min-w-0 flex-col py-0.5">
+                <div className="mb-1.5 flex items-center gap-1.5 text-xs text-muted">
+                  <Favicon siteUrl={story.source.siteUrl} name={story.source.name} size={14} />
+                  <span className="truncate font-medium">{story.source.name}</span>
+                  <span aria-hidden="true">·</span>
+                  <span className="shrink-0">{relativeTime(story.article.pubDate, now)}</span>
+                </div>
+                <h3
+                  className={`line-clamp-4 text-[15px] font-semibold leading-snug group-hover:text-accent sm:line-clamp-3 sm:text-sm ${
+                    isRead(story.article.link) ? 'text-muted' : ''
+                  }`}
                 >
-                  Covered by {story.coveredBy.length} sources
-                </p>
-              )}
-            </div>
-          </a>
+                  {story.article.title}
+                </h3>
+                {story.coveredBy.length > 1 && (
+                  <p
+                    className="mt-auto hidden pt-1.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-accent sm:block"
+                    title={`Also covered by: ${story.coveredBy.filter((n) => n !== story.source.name).join(', ')}`}
+                  >
+                    Covered by {story.coveredBy.length} sources
+                  </p>
+                )}
+              </div>
+            </a>
+            <SaveButton
+              saved={isSaved(story.article.link)}
+              title={story.article.title}
+              onToggle={() => onSave(story)}
+              // Schmal: runde Marke oben rechts auf dem Bild, damit die Textspalte ihre volle Breite behält.
+              // Ab `sm`: unauffällig oben rechts in der Karte.
+              tone={
+                isSaved(story.article.link)
+                  ? 'text-[#ff8a4c] sm:text-accent'
+                  : 'text-white sm:text-muted sm:hover:text-accent'
+              }
+              className={`absolute left-[87px] top-[15px] h-8 w-8 rounded-full bg-black/55 sm:left-auto sm:right-1 sm:top-1 sm:h-9 sm:w-9 sm:rounded-md sm:bg-transparent ${
+                isSaved(story.article.link) ? '' : 'pointer-fine:opacity-0 pointer-fine:group-hover/story:opacity-100 focus-visible:opacity-100'
+              }`}
+            />
+          </div>
         ))}
       </div>
     </section>

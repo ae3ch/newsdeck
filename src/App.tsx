@@ -1,11 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Article } from '../shared/types';
 import { BackToTop } from './components/BackToTop';
 import { Header } from './components/Header';
-import { LEGAL_DOCS, LegalView, type LegalDoc } from './components/legal/LegalView';
-import { CustomizeView } from './components/setup/CustomizeView';
-import { InstallView } from './components/setup/InstallView';
-import { Onboarding } from './components/setup/Onboarding';
+import { LEGAL_DOCS, type LegalDoc } from './components/legal/docs';
+import type { BrokenSource } from './components/setup/SourceHealth';
 import type { SetupActions } from './components/setup/types';
 import { SourceGrid, type GridItem } from './components/SourceGrid';
 import { TopicFilter } from './components/TopicFilter';
@@ -14,6 +12,7 @@ import type { NewSource } from './components/AddSourceForm';
 import { useFeeds, useNow } from './hooks/useFeeds';
 import { useOgImages } from './hooks/useOgImages';
 import { useReadLinks } from './hooks/useReadLinks';
+import { useSaved } from './hooks/useSaved';
 import {
   STORAGE_KEY,
   decodeInstallHash,
@@ -33,9 +32,19 @@ import {
   type Settings,
 } from './lib/config';
 import { isSafeLink } from './lib/format';
+import { brokenFeeds } from './lib/health';
 import { isStandalone } from './lib/install';
+import { makeMuteMatcher } from './lib/mute';
 import { topicOf, topicsOf } from './lib/topics';
 import { rankTopStories, type Story } from './lib/topStories';
+
+// Seltener gebrauchte Ansichten werden erst bei Bedarf geladen; das hält die erste Ladung klein.
+// Der Service Worker speichert sie trotzdem vorab, damit sie auch ohne Netz öffnen.
+const CustomizeView = lazy(() => import('./components/setup/CustomizeView').then((m) => ({ default: m.CustomizeView })));
+const Onboarding = lazy(() => import('./components/setup/Onboarding').then((m) => ({ default: m.Onboarding })));
+const InstallView = lazy(() => import('./components/setup/InstallView').then((m) => ({ default: m.InstallView })));
+const LegalView = lazy(() => import('./components/legal/LegalView').then((m) => ({ default: m.LegalView })));
+const SavedView = lazy(() => import('./components/SavedView').then((m) => ({ default: m.SavedView })));
 
 const TOP_STORY_COUNT = 6;
 const TOP_STORY_AGE_STEP = 5 * 60_000;
@@ -76,11 +85,12 @@ function linkedLayout(hash: string, current: DashboardConfig): DashboardConfig |
   return install && !sameLayout(install, current) ? install : null;
 }
 
-type View = 'dashboard' | 'customize' | 'onboarding' | 'install' | LegalDoc;
+type View = 'dashboard' | 'customize' | 'onboarding' | 'install' | 'saved' | LegalDoc;
 /** Feste Adressen der Ansichten. Die Homescreen-Seite fehlt hier: Ihr Hash enthält das Layout. */
 const VIEW_HASH: Record<Exclude<View, 'dashboard' | 'install'>, string> = {
   customize: '#customize',
   onboarding: '#setup',
+  saved: '#saved',
   privacy: '#privacy',
   cookies: '#cookies',
   terms: '#terms',
@@ -184,11 +194,35 @@ export default function App() {
     [config.sources, config.settings],
   );
   const feedUrls = useMemo(() => enabled.map((s) => s.feedUrl), [enabled]);
-  const { feeds, loading, error, updatedAt, refresh } = useFeeds(feedUrls);
+  const { feeds, loading, error, updatedAt, health, refresh } = useFeeds(feedUrls);
 
   const needle = query.trim().toLowerCase();
   const { articlesPerCard, showImages, showTopStories } = config.settings;
   const { isRead, markRead } = useReadLinks();
+  const { saved, isSaved, toggle: toggleSaved, clear: clearSaved } = useSaved();
+  const onSave = useCallback(
+    (a: Article, source: { id: string; name: string }) =>
+      toggleSaved({ link: a.link, title: a.title, image: a.image, pubDate: a.pubDate, sourceId: source.id, sourceName: source.name }),
+    [toggleSaved],
+  );
+
+  // Stichwortfilter: Schlagzeilen mit ausgeblendeten Wörtern erscheinen nirgends.
+  const mutedWords = config.settings.mutedWords;
+  const isMuted = useMemo(() => makeMuteMatcher(mutedWords), [mutedWords]);
+  const visibleArticles = useCallback(
+    (articles: Article[] | undefined) => articles?.filter((a) => isSafeLink(a.link) && !isMuted?.(a.title)),
+    [isMuted],
+  );
+  const mutedCount = useMemo(() => {
+    if (!isMuted) return 0;
+    return enabled.reduce((n, s) => n + (feeds[s.feedUrl]?.articles.filter((a) => isMuted(a.title)).length ?? 0), 0);
+  }, [enabled, feeds, isMuted]);
+
+  // Quellen, die seit über einem Tag nicht laden (für den Hinweis unter «Customize»).
+  const broken = useMemo<BrokenSource[]>(() => {
+    const failing = brokenFeeds(health, now);
+    return enabled.filter((s) => failing[s.feedUrl]).map((s) => ({ source: s, ...failing[s.feedUrl] }));
+  }, [enabled, health, now]);
 
   // Themen-Filter: gilt für diese Sitzung. Gibt es das gewählte Thema nicht mehr, sind es wieder alle.
   const topics = useMemo(() => topicsOf(enabled), [enabled]);
@@ -206,7 +240,7 @@ export default function App() {
     for (const source of enabled) {
       if (topic && topicOf(source) !== topic) continue;
       const feed = feeds[source.feedUrl];
-      let articles: Article[] | undefined = feed?.articles.filter((a) => isSafeLink(a.link));
+      let articles = visibleArticles(feed?.articles);
       if (needle && articles && !source.name.toLowerCase().includes(needle)) {
         articles = articles.filter(
           (a) => a.title.toLowerCase().includes(needle) || a.description.toLowerCase().includes(needle),
@@ -216,7 +250,7 @@ export default function App() {
       out.push({ source, articles, error: feed?.error });
     }
     return out;
-  }, [enabled, feeds, needle, topic]);
+  }, [enabled, feeds, needle, topic, visibleArticles]);
 
   // Artikel ohne Bild im Feed: Vorschaubild (og:image) der Artikelseite nachladen, aber nur für
   // das, was zu sehen ist: die Top-Meldungen und je Karte die eingeblendeten Artikel. Reihum pro
@@ -255,10 +289,10 @@ export default function App() {
     if (!showTopStories || needle) return [];
     const all = enabled.map((source) => ({
       source,
-      articles: feeds[source.feedUrl]?.articles.filter((a) => isSafeLink(a.link)).map(withImage),
+      articles: visibleArticles(feeds[source.feedUrl]?.articles)?.map(withImage),
     }));
     return rankTopStories(all, ageTick * TOP_STORY_AGE_STEP, TOP_STORY_COUNT);
-  }, [enabled, feeds, withImage, showTopStories, needle, ageTick]);
+  }, [enabled, feeds, withImage, visibleArticles, showTopStories, needle, ageTick]);
   // Welche Top-Meldungen noch kein Bild haben, steht erst nach der Auswahl fest.
   const storiesWithoutImage = stories
     .filter((s) => !s.article.image)
@@ -321,6 +355,13 @@ export default function App() {
       ),
     [updateSources],
   );
+  const onReplaceFeed = useCallback(
+    (id: string, feedUrl: string) =>
+      updateSources((list) =>
+        list.some((s) => s.feedUrl === feedUrl) ? list : list.map((s) => (s.id === id ? { ...s, feedUrl } : s)),
+      ),
+    [updateSources],
+  );
   const onSettings = useCallback(
     (patch: Partial<Settings>) => setConfig((c) => ({ ...c, settings: { ...c.settings, ...patch } })),
     [],
@@ -340,6 +381,7 @@ export default function App() {
     onShift,
     onRemove,
     onAdd,
+    onReplaceFeed,
     onSettings,
     onReplace: setConfig,
     onReset: () => setConfig(defaultConfig()),
@@ -365,6 +407,9 @@ export default function App() {
         inSetup={view !== 'dashboard'}
         onToggleSetup={() => navigate(view === 'dashboard' ? 'customize' : 'dashboard')}
         onHome={() => navigate('dashboard')}
+        savedCount={saved.length}
+        inSaved={view === 'saved'}
+        onOpenSaved={() => navigate(view === 'saved' ? 'dashboard' : 'saved')}
       />
 
       <main className="page-x mx-auto max-w-[1400px] py-4 sm:py-6">
@@ -391,96 +436,128 @@ export default function App() {
           </div>
         )}
 
-        {view === 'customize' ? (
-          <CustomizeView
-            config={config}
-            {...actions}
-            onStartOnboarding={startOnboarding}
-            onInstall={() => navigate('install', encodeInstallHash(config))}
-            onDone={() => navigate('dashboard')}
-          />
-        ) : view === 'install' ? (
-          <InstallView config={shared ?? config} pending={shared !== null} adopted={adopted} onDone={() => navigate('dashboard')} />
-        ) : view === 'privacy' || view === 'cookies' || view === 'terms' ? (
-          <LegalView doc={view} onBack={() => navigate('dashboard')} />
-        ) : view === 'onboarding' ? (
-          <Onboarding
-            config={config}
-            {...actions}
-            onFinish={() => {
-              markOnboarded();
-              navigate('dashboard');
-            }}
-            onCancel={() => navigate('dashboard')}
-          />
-        ) : enabled.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-line px-6 py-16 text-center">
-            <p className="text-lg font-semibold">No sources active</p>
-            <p className="mt-1 text-sm text-muted">Choose topics or add your own news sites.</p>
-            <div className="mt-5 flex flex-wrap justify-center gap-2">
-              <button
-                type="button"
-                className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-accent-ink"
-                onClick={startOnboarding}
-              >
-                Start guided setup
-              </button>
-              <button
-                type="button"
-                className="h-10 rounded-lg border border-line px-4 text-sm font-medium"
-                onClick={() => navigate('customize')}
-              >
-                Customize
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
-            {showWelcome && (
-              <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
-                <p className="min-w-0 flex-1 basis-64">
-                  <span className="font-semibold">New here?</span>{' '}
-                  <span className="text-muted">
-                    Pick your language and topics such as Security, Development or AI for your dashboard in a few steps.
-                  </span>
-                </p>
-                <button type="button" className="h-10 rounded-lg bg-accent px-3 font-semibold text-accent-ink sm:h-9" onClick={startOnboarding}>
+        <Suspense fallback={<p className="py-16 text-center text-sm text-muted">Loading …</p>}>
+          {view === 'customize' ? (
+            <CustomizeView
+              config={config}
+              broken={broken}
+              now={now}
+              {...actions}
+              onStartOnboarding={startOnboarding}
+              onInstall={() => navigate('install', encodeInstallHash(config))}
+              onDone={() => navigate('dashboard')}
+            />
+          ) : view === 'install' ? (
+            <InstallView config={shared ?? config} pending={shared !== null} adopted={adopted} onDone={() => navigate('dashboard')} />
+          ) : view === 'saved' ? (
+            <SavedView
+              saved={saved}
+              now={now}
+              showImages={showImages}
+              isRead={isRead}
+              onRead={markRead}
+              onToggle={(a) => toggleSaved(a)}
+              onClear={clearSaved}
+              onBack={() => navigate('dashboard')}
+            />
+          ) : view === 'privacy' || view === 'cookies' || view === 'terms' ? (
+            <LegalView doc={view} onBack={() => navigate('dashboard')} />
+          ) : view === 'onboarding' ? (
+            <Onboarding
+              config={config}
+              {...actions}
+              onFinish={() => {
+                markOnboarded();
+                navigate('dashboard');
+              }}
+              onCancel={() => navigate('dashboard')}
+            />
+          ) : enabled.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-line px-6 py-16 text-center">
+              <p className="text-lg font-semibold">No sources active</p>
+              <p className="mt-1 text-sm text-muted">Choose topics or add your own news sites.</p>
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                <button
+                  type="button"
+                  className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-accent-ink"
+                  onClick={startOnboarding}
+                >
                   Start guided setup
                 </button>
-                <button type="button" className="h-10 rounded-lg border border-line px-3 font-medium sm:h-9" onClick={dismissWelcome}>
-                  Not now
+                <button
+                  type="button"
+                  className="h-10 rounded-lg border border-line px-4 text-sm font-medium"
+                  onClick={() => navigate('customize')}
+                >
+                  Customize
                 </button>
               </div>
-            )}
-            <TopStories stories={stories} now={now} isRead={isRead} onRead={markRead} />
-            <div className="mb-3 flex items-baseline justify-between gap-4">
-              <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                {needle ? `Results for "${query.trim()}"` : 'Your sources'}
-              </h2>
-              {!needle && <p className="hidden text-xs text-muted sm:block">Drag a card by its handle to reorder</p>}
             </div>
-            {topics.length > 1 && <TopicFilter topics={topics} value={topic} onChange={setTopic} />}
-            {items.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-line px-6 py-12 text-center text-sm text-muted">
-                No articles found.
-              </p>
-            ) : (
-              <SourceGrid
-                items={items}
-                limit={articlesPerCard}
-                expanded={expanded}
-                onMore={onMore}
-                onLess={onLess}
+          ) : (
+            <>
+              {showWelcome && (
+                <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
+                  <p className="min-w-0 flex-1 basis-64">
+                    <span className="font-semibold">New here?</span>{' '}
+                    <span className="text-muted">
+                      Pick your language and topics such as Security, Development or AI for your dashboard in a few steps.
+                    </span>
+                  </p>
+                  <button type="button" className="h-10 rounded-lg bg-accent px-3 font-semibold text-accent-ink sm:h-9" onClick={startOnboarding}>
+                    Start guided setup
+                  </button>
+                  <button type="button" className="h-10 rounded-lg border border-line px-3 font-medium sm:h-9" onClick={dismissWelcome}>
+                    Not now
+                  </button>
+                </div>
+              )}
+              <TopStories
+                stories={stories}
+                now={now}
                 isRead={isRead}
                 onRead={markRead}
-                now={now}
-                filtered={Boolean(needle)}
-                showImages={showImages}
-                onMove={onMove}
+                isSaved={isSaved}
+                onSave={(story) => onSave(story.article, story.source)}
               />
-            )}
-          </>
-        )}
+              <div className="mb-3 flex items-baseline justify-between gap-4">
+                <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+                  {needle ? `Results for "${query.trim()}"` : 'Your sources'}
+                </h2>
+                {!needle && <p className="hidden text-xs text-muted sm:block">Drag a card by its handle to reorder</p>}
+              </div>
+              {topics.length > 1 && <TopicFilter topics={topics} value={topic} onChange={setTopic} />}
+              {mutedCount > 0 && (
+                <p className="mb-3 text-xs text-muted">
+                  {mutedCount} {mutedCount === 1 ? 'headline' : 'headlines'} hidden by your muted words ·{' '}
+                  <button type="button" className="underline underline-offset-4 hover:text-ink" onClick={() => navigate('customize')}>
+                    Edit
+                  </button>
+                </p>
+              )}
+              {items.length === 0 ? (
+                <p className="rounded-xl border border-dashed border-line px-6 py-12 text-center text-sm text-muted">
+                  No articles found.
+                </p>
+              ) : (
+                <SourceGrid
+                  items={items}
+                  limit={articlesPerCard}
+                  expanded={expanded}
+                  onMore={onMore}
+                  onLess={onLess}
+                  isRead={isRead}
+                  onRead={markRead}
+                  isSaved={isSaved}
+                  onSave={onSave}
+                  now={now}
+                  filtered={Boolean(needle)}
+                  showImages={showImages}
+                  onMove={onMove}
+                />
+              )}
+            </>
+          )}
+        </Suspense>
       </main>
 
       <footer className="page-x mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-6 gap-y-3 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-4 text-xs text-muted">

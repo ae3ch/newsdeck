@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FeedResult } from '../../shared/types';
-import { fetchFeeds } from '../lib/api';
+import { ApiError, fetchFeeds } from '../lib/api';
+import { HEALTH_KEY, parseHealth, pruneHealth, updateHealth, type Health } from '../lib/health';
 import { coversAll, decidePoll, type Claim } from '../lib/polling';
 
 export const REFRESH_INTERVAL = 60_000;
@@ -14,6 +15,8 @@ export interface FeedsState {
   error: string | null;
   /** Zeitpunkt der letzten erfolgreichen Aktualisierung (ms) oder null. */
   updatedAt: number | null;
+  /** Je Feed: seit wann er ununterbrochen nicht lädt (siehe src/lib/health.ts). */
+  health: Health;
   refresh: () => void;
 }
 
@@ -42,6 +45,22 @@ function writeCache(feeds: FeedMap, at: number) {
     } catch {
       // nichts zu tun
     }
+  }
+}
+
+function readHealth(): Health {
+  try {
+    return parseHealth(localStorage.getItem(HEALTH_KEY));
+  } catch {
+    return {};
+  }
+}
+
+function writeHealth(health: Health) {
+  try {
+    localStorage.setItem(HEALTH_KEY, JSON.stringify(health));
+  } catch {
+    // ohne Speicher wird der Zustand der Quellen nicht über Besuche hinweg verfolgt
   }
 }
 
@@ -110,6 +129,7 @@ export function useFeeds(urls: string[]): FeedsState {
   const [loading, setLoading] = useState(urls.length > 0);
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<number | null>(initial.at);
+  const [health, setHealth] = useState<Health>(readHealth);
   const refreshRef = useRef<() => void>(() => {});
   const feedsRef = useRef(feeds);
   feedsRef.current = feeds;
@@ -163,15 +183,24 @@ export function useFeeds(urls: string[]): FeedsState {
           return next;
         });
         setUpdatedAt(at);
+        // Vom gespeicherten Stand ausgehen: Andere Tabs schreiben ihn ebenfalls fort.
+        const nextHealth = pruneHealth(updateHealth(readHealth(), result.feeds, at), list);
+        writeHealth(nextHealth);
+        setHealth(nextHealth);
         setError(result.partial ? 'Some sources could not be updated.' : null);
-      } catch {
+      } catch (err) {
         if (disposed || mine.signal.aborted) return;
         writeClaim({ at: started, failed: true });
         const saved = Object.keys(feedsRef.current).length > 0;
+        const status = err instanceof ApiError ? err.status : 0;
         setError(
           navigator.onLine === false
             ? `Offline${saved ? ' · showing saved headlines' : ''}`
-            : 'Update failed. Retrying in a minute.',
+            : status === 429
+              ? 'Too many requests from your network. Retrying in a minute.'
+              : status === 403
+                ? 'The server refused the request. Reload the page.'
+                : 'Update failed. Retrying in a minute.',
         );
       } finally {
         if (inFlight === started && !mine.signal.aborted) inFlight = null;
@@ -212,6 +241,7 @@ export function useFeeds(urls: string[]): FeedsState {
 
     // Ein anderer Tab hat neue Daten gespeichert: übernehmen und den eigenen Abruf verschieben.
     const onStorage = (e: StorageEvent) => {
+      if (e.key === HEALTH_KEY) setHealth(readHealth());
       if (e.key !== CACHE_KEY || !e.newValue) return;
       const shared = readCache();
       if (!coversAll(shared.feeds, list)) return;
@@ -251,7 +281,7 @@ export function useFeeds(urls: string[]): FeedsState {
   }, [key]);
 
   const refresh = useCallback(() => refreshRef.current(), []);
-  return { feeds, loading, error, updatedAt, refresh };
+  return { feeds, loading, error, updatedAt, health, refresh };
 }
 
 /** Liefert die aktuelle Zeit und aktualisiert sie regelmässig (für relative Zeitangaben). */

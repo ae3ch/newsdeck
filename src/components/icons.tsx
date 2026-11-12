@@ -89,6 +89,11 @@ export const ShareIcon = (p: P) => (
     <path d="M12 15V3M8 7l4-4 4 4M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1" />
   </Icon>
 );
+export const BookmarkIcon = ({ filled, ...p }: P & { filled?: boolean }) => (
+  <Icon {...p} fill={filled ? 'currentColor' : 'none'}>
+    <path d="M6 4h12v16l-6-4-6 4z" />
+  </Icon>
+);
 export const PlusIcon = (p: P) => (
   <Icon {...p}>
     <path d="M12 5v14M5 12h14" />

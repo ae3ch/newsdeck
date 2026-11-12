@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { DEFAULT_SOURCES } from '../src/data/defaultSources';
 import { expect, test } from './fixtures';
 
 /** Die Karten der Quellen. Die Top-Meldungen sind Links, keine <article>. */
@@ -27,7 +28,7 @@ async function open(page: Page, url: string) {
 test('kein horizontales Scrollen in allen Ansichten, bei 390 und 320 px', async ({ page }) => {
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 640 });
-    for (const hash of ['', '#customize', '#setup', '#privacy', '#cookies', '#terms']) {
+    for (const hash of ['', '#customize', '#setup', '#saved', '#privacy', '#cookies', '#terms']) {
       await open(page, `/${hash}`);
       await expect(page.locator('main h1, main h2').first()).toBeVisible();
       expect(await overflow(page), `${width}px ${hash || 'dashboard'}`).toBe(0);
@@ -190,6 +191,99 @@ test('Homescreen-Link bringt das Layout auf ein neues Gerät und in die App', as
   await expect(question).toBeHidden();
   expect(page.url()).toBe(link);
   await expect.poll(() => stored(page)).toContain('"id":"golem","enabled":true');
+});
+
+test('selbst erzeugte Links kommen mit QR-Code', async ({ page }) => {
+  await page.goto('/#customize');
+  await page.getByRole('button', { name: 'Create link' }).click();
+  const shareQr = page.getByRole('img', { name: 'QR code of the link to this layout' });
+  await expect(shareQr).toBeVisible();
+  expect(await page.getByRole('textbox', { name: 'Link to this layout' }).inputValue()).toContain('#layout=1.');
+
+  await page.getByRole('button', { name: 'Create home-screen link' }).click();
+  const installQr = page.getByRole('img', { name: 'QR code of the home-screen link' });
+  await expect(installQr).toBeVisible();
+  // Ganze Pixel je Modul, und der Code passt in die Handybreite.
+  const box = await installQr.evaluate((el) => {
+    const modules = Number(el.getAttribute('viewBox')!.split(' ')[2]);
+    return { perModule: Number(el.getAttribute('width')) / modules, shown: el.getBoundingClientRect().width };
+  });
+  expect(Number.isInteger(box.perModule) && box.perModule >= 3).toBe(true);
+  expect(box.shown).toBeLessThanOrEqual(390 - 32);
+  expect(await overflow(page)).toBe(0);
+});
+
+test('Artikel merken, in der Merkliste finden und wieder entfernen', async ({ page }) => {
+  await page.goto('/');
+  const row = cards(page).first().locator('ol > li').first();
+  const title = await row.locator('a span.line-clamp-3').innerText();
+  await row.getByRole('button', { name: /^Save for later/ }).click();
+  await expect(row.getByRole('button', { name: /^Remove from saved/ })).toHaveAttribute('aria-pressed', 'true');
+
+  await page.reload();
+  await page.getByRole('button', { name: 'Saved for later (1)' }).click();
+  await expect(page.getByRole('heading', { name: 'Saved for later' })).toBeVisible();
+  await expect(page.getByRole('main').getByText(title)).toBeVisible();
+  expect(await overflow(page)).toBe(0);
+
+  await page.getByRole('main').getByRole('button', { name: /^Remove from saved/ }).click();
+  await expect(page.getByText('Nothing saved yet.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Saved for later (0)' })).toBeVisible();
+});
+
+test('OPML-Import legt neue Quellen an und erkennt vorhandene', async ({ page }) => {
+  const heise = DEFAULT_SOURCES.find((s) => s.id === 'heise')!.feedUrl;
+  const opml = `<?xml version="1.0"?><opml version="2.0"><body><outline text="Tech">
+    <outline type="rss" text="Imported Blog" xmlUrl="https://imported.example/feed.xml"/>
+    <outline type="rss" text="heise" xmlUrl="${heise.replace(/&/g, '&amp;')}"/>
+  </outline></body></opml>`;
+  await page.goto('/#customize');
+  await page.getByLabel('OPML file').setInputFiles({ name: 'feeds.opml', mimeType: 'text/xml', buffer: Buffer.from(opml) });
+  await expect(page.getByText('2 feeds in the file: 1 added, 1 already active.')).toBeVisible();
+  await expect(page.getByText('Imported Blog').first()).toBeVisible();
+
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export OPML' }).click();
+  expect((await download).suggestedFilename()).toBe('newsdeck-feeds.opml');
+});
+
+test('ausgeblendete Wörter entfernen Schlagzeilen vom Dashboard', async ({ page }) => {
+  await page.goto('/#customize');
+  await page.getByLabel('Word or phrase to hide').fill('headline 1');
+  await page.getByRole('button', { name: 'Hide', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Show headlines with "headline 1" again' })).toBeVisible();
+
+  await page.goto('/');
+  const first = cards(page).first().locator('ol > li a').first();
+  await expect(first).toContainText('headline 2');
+  await expect(page.getByText(/headlines hidden by your muted words/)).toBeVisible();
+  // «headline 1» trifft nicht «headline 10».
+  await cards(page).first().getByRole('button', { name: /^Show \d+ more/ }).click();
+  await cards(page).first().getByRole('button', { name: /^Show \d+ more/ }).click();
+  await expect(cards(page).first().getByText(/headline 10$/)).toBeVisible();
+});
+
+test('Quellen, die seit einem Tag nicht laden, werden gemeldet', async ({ page }) => {
+  const feedUrl = 'https://broken.example/feed.xml';
+  await page.addInitScript((url) => {
+    localStorage.setItem(
+      'tech-news:config',
+      JSON.stringify({ version: 2, sources: [{ id: 'c-broken', name: 'Broken Blog', siteUrl: 'https://broken.example/', feedUrl: url }] }),
+    );
+    if (!localStorage.getItem('tech-news:health')) {
+      localStorage.setItem('tech-news:health', JSON.stringify({ [url]: { since: Date.now() - 2 * 86_400_000, error: 'HTTP 404' } }));
+    }
+  }, feedUrl);
+  await page.goto('/');
+  await expect(cards(page).first()).toContainText('Feed unavailable');
+
+  await page.goto('/#customize');
+  const notice = page.getByRole('region', { name: '1 source has not loaded for over a day' });
+  await expect(notice).toContainText('Broken Blog');
+  await expect(notice).toContainText('for 2 days');
+  await expect(page.getByText('Not loading').first()).toBeVisible();
+  await notice.getByRole('button', { name: 'Turn off' }).click();
+  await expect(notice).toBeHidden();
 });
 
 test.describe('ohne Netz', () => {

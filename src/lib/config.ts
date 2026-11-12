@@ -1,4 +1,6 @@
+import { deflateSync, inflateSync, strFromU8, strToU8 } from 'fflate';
 import { DEFAULT_SOURCES, type DefaultSource } from '../data/defaultSources';
+import { cleanMutedWords } from './mute';
 
 export type Theme = 'system' | 'light' | 'dark';
 export type Lang = 'de' | 'en';
@@ -29,6 +31,8 @@ export interface Settings {
   showImages: boolean;
   /** Sprachen, in denen Inhalte gezeigt werden; nie leer. */
   languages: Lang[];
+  /** Wörter und Phrasen, deren Schlagzeilen ausgeblendet werden. */
+  mutedWords: string[];
 }
 
 /** Version 1 zeigte acht Artikel pro Karte; ihre gespeicherte Anzahl wird nicht übernommen. */
@@ -50,6 +54,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showTopStories: true,
   showImages: true,
   languages: ['de', 'en'],
+  mutedWords: [],
 };
 
 const DEFAULTS_BY_ID = new Map(DEFAULT_SOURCES.map((s) => [s.id, s]));
@@ -95,7 +100,7 @@ export function defaultConfig(): DashboardConfig {
   return {
     version: CONFIG_VERSION,
     sources: DEFAULT_SOURCES.map((d) => fromCatalog(d, d.starter === true)),
-    settings: { ...DEFAULT_SETTINGS, languages: [...DEFAULT_SETTINGS.languages] },
+    settings: { ...DEFAULT_SETTINGS, languages: [...DEFAULT_SETTINGS.languages], mutedWords: [] },
   };
 }
 
@@ -114,6 +119,7 @@ function normalizeSettings(input: unknown, legacy: boolean): Settings {
     showTopStories: typeof s.showTopStories === 'boolean' ? s.showTopStories : DEFAULT_SETTINGS.showTopStories,
     showImages: typeof s.showImages === 'boolean' ? s.showImages : DEFAULT_SETTINGS.showImages,
     languages: languages.length > 0 ? languages : [...DEFAULT_SETTINGS.languages],
+    mutedWords: cleanMutedWords(s.mutedWords),
   };
 }
 
@@ -225,61 +231,77 @@ export function importConfig(text: string): DashboardConfig {
   return normalizeConfig(data);
 }
 
-// --- Share-Link: Konfiguration im URL-Hash (verlässt den Browser nie) ---
+// --- Links mit Layout: Share-Link und Homescreen-Link tragen das Layout im URL-Hash.
+// Der Hash wird nie an einen Server geschickt. Damit die Links in einen QR-Code passen, werden
+// sie knapp gehalten und komprimiert. ---
 
 const HASH_PREFIX = '#layout=';
+const INSTALL_PREFIX = '#install=';
+/** Kennzeichen des komprimierten Formats. Der Punkt kommt in base64url nicht vor. */
+const PACKED = '1.';
+/** Obergrenze für entpackte Daten, damit ein präparierter Link den Browser nicht lahmlegt. */
+const MAX_UNPACKED = 200_000;
 
-function toBase64Url(text: string): string {
-  const bytes = new TextEncoder().encode(text);
+function toBase64Url(bytes: Uint8Array): string {
   let bin = '';
   for (const b of bytes) bin += String.fromCharCode(b);
   return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-function fromBase64Url(value: string): string {
+function fromBase64Url(value: string): Uint8Array {
   const b64 = value.replace(/-/g, '+').replace(/_/g, '/');
   const bin = atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4));
-  return new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)));
+  return Uint8Array.from(bin, (c) => c.charCodeAt(0));
 }
 
-export function encodeShareHash(config: DashboardConfig): string {
-  return HASH_PREFIX + toBase64Url(JSON.stringify(serializeConfig(config)));
+/**
+ * Das Layout ohne Überflüssiges: Abgewählte Katalogquellen fehlen, sofern sie nicht zur
+ * Startauswahl gehören; `normalizeConfig` hängt sie beim Einlesen abgewählt wieder an.
+ */
+function compactLayout(config: DashboardConfig): unknown {
+  const off = (s: Source) => (s.enabled ? {} : { enabled: false });
+  const sources = config.sources
+    .filter((s) => s.custom || s.enabled || DEFAULTS_BY_ID.get(s.id)?.starter)
+    .map((s) => (s.custom ? { id: s.id, name: s.name, siteUrl: s.siteUrl, feedUrl: s.feedUrl, ...off(s) } : { id: s.id, ...off(s) }));
+  return { version: CONFIG_VERSION, sources, settings: config.settings };
+}
+
+const pack = (data: unknown): string => PACKED + toBase64Url(deflateSync(strToU8(JSON.stringify(data)), { level: 9 }));
+
+function unpack(payload: string): unknown {
+  if (!payload.startsWith(PACKED)) {
+    // Unkomprimierte Links aus der ersten Fassung.
+    return JSON.parse(strFromU8(fromBase64Url(payload)));
+  }
+  const out = inflateSync(fromBase64Url(payload.slice(PACKED.length)), { out: new Uint8Array(MAX_UNPACKED) });
+  if (out.length >= MAX_UNPACKED) throw new Error('Layout too large');
+  return JSON.parse(strFromU8(out));
 }
 
 function decodeHash(prefix: string, hash: string): DashboardConfig | null {
   if (!hash.startsWith(prefix) || hash.length > 60_000) return null;
   try {
-    return normalizeConfig(JSON.parse(fromBase64Url(hash.slice(prefix.length))));
+    return normalizeConfig(unpack(hash.slice(prefix.length)));
   } catch {
     return null;
   }
 }
 
+/** Link, der ein Layout überträgt; beim Öffnen fragt die Seite, ob es übernommen werden soll. */
+export const encodeShareHash = (config: DashboardConfig): string => HASH_PREFIX + pack(compactLayout(config));
 export const decodeShareHash = (hash: string): DashboardConfig | null => decodeHash(HASH_PREFIX, hash);
 
-// --- Homescreen-Link: Auf iOS hat eine App auf dem Homescreen einen eigenen, anfangs leeren
-// Speicher. Das Layout reist deshalb in der Adresse mit, unter der das Icon angelegt wird. ---
-
-const INSTALL_PREFIX = '#install=';
-
+/**
+ * Homescreen-Link: Auf iOS hat eine App auf dem Homescreen einen eigenen, anfangs leeren Speicher.
+ * Das Layout reist deshalb in der Adresse mit, unter der das Icon angelegt wird.
+ */
+export const encodeInstallHash = (config: DashboardConfig): string => INSTALL_PREFIX + pack(compactLayout(config));
+export const decodeInstallHash = (hash: string): DashboardConfig | null => decodeHash(INSTALL_PREFIX, hash);
 export const isInstallHash = (hash: string): boolean => hash.startsWith(INSTALL_PREFIX);
 
-/**
- * Kürzer als der Share-Link, damit die Adresse des Icons klein bleibt: Abgewählte Katalogquellen
- * fehlen, sofern sie nicht zur Startauswahl gehören; `normalizeConfig` hängt sie abgewählt wieder an.
- */
-export function encodeInstallHash(config: DashboardConfig): string {
-  const off = (s: Source) => (s.enabled ? {} : { enabled: false });
-  const sources = config.sources
-    .filter((s) => s.custom || s.enabled || DEFAULTS_BY_ID.get(s.id)?.starter)
-    .map((s) => (s.custom ? { id: s.id, name: s.name, siteUrl: s.siteUrl, feedUrl: s.feedUrl, ...off(s) } : { id: s.id, ...off(s) }));
-  return INSTALL_PREFIX + toBase64Url(JSON.stringify({ version: CONFIG_VERSION, sources, settings: config.settings }));
-}
-
-export const decodeInstallHash = (hash: string): DashboardConfig | null => decodeHash(INSTALL_PREFIX, hash);
-
 /** true, wenn beide Layouts dasselbe Dashboard ergeben (Quellen, Reihenfolge, Darstellung). */
-export const sameLayout = (a: DashboardConfig, b: DashboardConfig): boolean => encodeInstallHash(a) === encodeInstallHash(b);
+export const sameLayout = (a: DashboardConfig, b: DashboardConfig): boolean =>
+  JSON.stringify(compactLayout(a)) === JSON.stringify(compactLayout(b));
 
 export function hasStoredConfig(): boolean {
   try {

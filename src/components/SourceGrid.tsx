@@ -28,6 +28,8 @@ interface Props {
   onLess: (sourceId: string) => void;
   isRead: (link: string) => boolean;
   onRead: (link: string) => void;
+  isSaved: (link: string) => boolean;
+  onSave: (article: Article, source: Source) => void;
   now: number;
   filtered: boolean;
   showImages: boolean;
