@@ -67,20 +67,20 @@ export const DEFAULT_SOURCES: DefaultSource[] = [
   s('bleepingcomputer', 'BleepingComputer', 'https://www.bleepingcomputer.com', 'https://morss.it/:proxy/https://www.bleepingcomputer.com/feed/', 'security', 'en', true),
   s('phoronix', 'Phoronix', 'https://www.phoronix.com', 'https://www.phoronix.com/rss.php', 'linux', 'en', true),
   s('winfuture', 'WinFuture', 'https://winfuture.de', 'https://static.winfuture.de/feeds/WinFuture-News-rss2.0.xml', 'general', 'de', true),
-  s('ifun', 'ifun.de', 'https://www.ifun.de', 'https://www.ifun.de/feed', 'apple', 'de', true),
+  s('ifun', 'ifun.de', 'https://www.ifun.de', 'https://www.ifun.de/feed/', 'apple', 'de', true),
   s('9to5mac', '9to5Mac', 'https://9to5mac.com', 'https://9to5mac.com/feed/', 'apple', 'en', true),
   s('9to5google', '9to5Google', 'https://9to5google.com', 'https://9to5google.com/feed/', 'mobile', 'en', true),
   s('engadget', 'Engadget', 'https://www.engadget.com', 'https://www.engadget.com/rss.xml', 'general', 'en', true),
   s('techreview', 'MIT Technology Review', 'https://www.technologyreview.com', 'https://www.technologyreview.com/feed/', 'ai', 'en', true),
-  s('zdnet', 'ZDNET', 'https://www.zdnet.com', 'https://www.zdnet.com/news/rss.xml', 'general', 'en', true),
+  s('zdnet', 'ZDNET', 'https://www.zdnet.com', 'https://www.zdnet.com/rss/news/', 'general', 'en', true),
 
   // --- Allgemein ---
   s('spiegel-netzwelt', 'SPIEGEL Netzwelt', 'https://www.spiegel.de/netzwelt/', 'https://www.spiegel.de/netzwelt/index.rss', 'general', 'de'),
   s('404media', '404 Media', 'https://www.404media.co', 'https://www.404media.co/rss/', 'general', 'en'),
-  s('borncity', 'Borns IT- und Windows-Blog', 'https://www.borncity.com/blog/', 'https://www.borncity.com/blog/feed/', 'general', 'de'),
+  s('borncity', 'Borns IT- und Windows-Blog', 'https://www.borncity.com/blog/', 'https://borncity.com/blog/feed/', 'general', 'de'),
 
   // --- Security ---
-  s('heise-security', 'heise Security', 'https://www.heise.de/security/', 'https://www.heise.de/security/rss/news-atom.xml', 'security', 'de'),
+  s('heise-security', 'heise Security', 'https://www.heise.de/security/', 'https://www.heise.de/security/feed.xml', 'security', 'de'),
   s('krebs', 'Krebs on Security', 'https://krebsonsecurity.com', 'https://krebsonsecurity.com/feed/', 'security', 'en'),
   s('securityweek', 'SecurityWeek', 'https://www.securityweek.com', 'https://www.securityweek.com/feed/', 'security', 'en'),
   s('darkreading', 'Dark Reading', 'https://www.darkreading.com', 'https://www.darkreading.com/rss.xml', 'security', 'en'),
@@ -88,7 +88,7 @@ export const DEFAULT_SOURCES: DefaultSource[] = [
   s('therecord', 'The Record', 'https://therecord.media', 'https://therecord.media/feed', 'security', 'en'),
 
   // --- Entwicklung ---
-  s('heise-developer', 'heise Developer', 'https://www.heise.de/developer/', 'https://www.heise.de/developer/rss/news-atom.xml', 'developer', 'de'),
+  s('heise-developer', 'heise Developer', 'https://www.heise.de/developer/', 'https://www.heise.de/developer/feed.xml', 'developer', 'de'),
   s('lobsters', 'Lobsters', 'https://lobste.rs', 'https://lobste.rs/rss', 'developer', 'en'),
   s('github-blog', 'GitHub Blog', 'https://github.blog', 'https://github.blog/feed/', 'developer', 'en'),
   s('cloudflare-blog', 'Cloudflare Blog', 'https://blog.cloudflare.com', 'https://blog.cloudflare.com/rss/', 'developer', 'en'),
@@ -101,7 +101,7 @@ export const DEFAULT_SOURCES: DefaultSource[] = [
   // --- KI ---
   s('the-decoder', 'The Decoder', 'https://the-decoder.de', 'https://the-decoder.de/feed/', 'ai', 'de'),
   s('openai-news', 'OpenAI News', 'https://openai.com/news/', 'https://openai.com/news/rss.xml', 'ai', 'en'),
-  s('google-ai', 'Google AI Blog', 'https://blog.google/technology/ai/', 'https://blog.google/technology/ai/rss/', 'ai', 'en'),
+  s('google-ai', 'Google AI Blog', 'https://blog.google/technology/ai/', 'https://blog.google/innovation-and-ai/technology/ai/rss/', 'ai', 'en'),
   s('simonwillison', 'Simon Willison', 'https://simonwillison.net', 'https://simonwillison.net/atom/everything/', 'ai', 'en'),
 
   // --- Apple ---
@@ -122,7 +122,7 @@ export const DEFAULT_SOURCES: DefaultSource[] = [
   s('gnulinux', 'GNU/Linux.ch', 'https://gnulinux.ch', 'https://gnulinux.ch/rss.xml', 'linux', 'de'),
 
   // --- Hardware ---
-  s('tomshardware', "Tom's Hardware", 'https://www.tomshardware.com', 'https://www.tomshardware.com/feeds/all', 'hardware', 'en'),
+  s('tomshardware', "Tom's Hardware", 'https://www.tomshardware.com', 'https://www.tomshardware.com/feeds.xml', 'hardware', 'en'),
   s('pcworld', 'PCWorld', 'https://www.pcworld.com', 'https://www.pcworld.com/feed', 'hardware', 'en'),
   s('pcgh', 'PC Games Hardware', 'https://www.pcgameshardware.de', 'https://www.pcgameshardware.de/feed.cfm', 'hardware', 'de'),
 
@@ -146,8 +146,8 @@ export const DEFAULT_SOURCES: DefaultSource[] = [
   s('gamestar', 'GameStar', 'https://www.gamestar.de', 'https://www.gamestar.de/news/rss/news.rss', 'gaming', 'de'),
   s('eurogamer', 'Eurogamer', 'https://www.eurogamer.net', 'https://www.eurogamer.net/feed', 'gaming', 'en'),
   s('rps', 'Rock Paper Shotgun', 'https://www.rockpapershotgun.com', 'https://www.rockpapershotgun.com/feed', 'gaming', 'en'),
-  s('kotaku', 'Kotaku', 'https://kotaku.com', 'https://kotaku.com/rss', 'gaming', 'en'),
-  s('polygon', 'Polygon', 'https://www.polygon.com', 'https://www.polygon.com/rss/index.xml', 'gaming', 'en'),
+  s('kotaku', 'Kotaku', 'https://kotaku.com', 'https://kotaku.com/feed', 'gaming', 'en'),
+  s('polygon', 'Polygon', 'https://www.polygon.com', 'https://www.polygon.com/feed/', 'gaming', 'en'),
 
   // --- Krypto ---
   s('btc-echo', 'BTC-ECHO', 'https://www.btc-echo.de', 'https://www.btc-echo.de/feed/', 'crypto', 'de'),
