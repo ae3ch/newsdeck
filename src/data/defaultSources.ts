@@ -63,8 +63,8 @@ export const DEFAULT_SOURCES: DefaultSource[] = [
   s('caschy', 'Caschys Blog', 'https://stadt-bremerhaven.de', 'https://stadt-bremerhaven.de/feed/', 'general', 'de', true),
   s('netzpolitik', 'netzpolitik.org', 'https://netzpolitik.org', 'https://netzpolitik.org/feed/', 'policy', 'de', true),
   s('wired', 'WIRED', 'https://www.wired.com', 'https://www.wired.com/feed/rss', 'general', 'en', true),
-  s('thehackernews', 'The Hacker News', 'https://thehackernews.com', 'https://thehackernews.com/feeds/posts/default', 'security', 'en', true),
-  s('bleepingcomputer', 'BleepingComputer', 'https://www.bleepingcomputer.com', 'https://www.bleepingcomputer.com/feed/', 'security', 'en', true),
+  s('thehackernews', 'The Hacker News', 'https://thehackernews.com', 'https://feeds.feedburner.com/TheHackersNews', 'security', 'en', true),
+  s('bleepingcomputer', 'BleepingComputer', 'https://www.bleepingcomputer.com', 'https://morss.it/:proxy/https://www.bleepingcomputer.com/feed/', 'security', 'en', true),
   s('phoronix', 'Phoronix', 'https://www.phoronix.com', 'https://www.phoronix.com/rss.php', 'linux', 'en', true),
   s('winfuture', 'WinFuture', 'https://winfuture.de', 'https://static.winfuture.de/feeds/WinFuture-News-rss2.0.xml', 'general', 'de', true),
   s('ifun', 'ifun.de', 'https://www.ifun.de', 'https://www.ifun.de/feed', 'apple', 'de', true),
@@ -75,7 +75,6 @@ export const DEFAULT_SOURCES: DefaultSource[] = [
   s('zdnet', 'ZDNET', 'https://www.zdnet.com', 'https://www.zdnet.com/news/rss.xml', 'general', 'en', true),
 
   // --- Allgemein ---
-  s('gizmodo', 'Gizmodo', 'https://gizmodo.com', 'https://gizmodo.com/feed', 'general', 'en'),
   s('spiegel-netzwelt', 'SPIEGEL Netzwelt', 'https://www.spiegel.de/netzwelt/', 'https://www.spiegel.de/netzwelt/index.rss', 'general', 'de'),
   s('404media', '404 Media', 'https://www.404media.co', 'https://www.404media.co/rss/', 'general', 'en'),
   s('borncity', 'Borns IT- und Windows-Blog', 'https://www.borncity.com/blog/', 'https://www.borncity.com/blog/feed/', 'general', 'de'),
@@ -118,9 +117,9 @@ export const DEFAULT_SOURCES: DefaultSource[] = [
   // --- Linux & Open Source ---
   s('lwn', 'LWN.net', 'https://lwn.net', 'https://lwn.net/headlines/rss', 'linux', 'en'),
   s('omgubuntu', 'OMG! Ubuntu', 'https://www.omgubuntu.co.uk', 'https://www.omgubuntu.co.uk/feed', 'linux', 'en'),
-  s('9to5linux', '9to5Linux', 'https://9to5linux.com', 'https://9to5linux.com/feed/atom', 'linux', 'en'),
   s('itsfoss', "It's FOSS", 'https://itsfoss.com', 'https://itsfoss.com/rss/', 'linux', 'en'),
   s('linuxnews', 'LinuxNews.de', 'https://linuxnews.de', 'https://linuxnews.de/feed/', 'linux', 'de'),
+  s('gnulinux', 'GNU/Linux.ch', 'https://gnulinux.ch', 'https://gnulinux.ch/rss.xml', 'linux', 'de'),
 
   // --- Hardware ---
   s('tomshardware', "Tom's Hardware", 'https://www.tomshardware.com', 'https://www.tomshardware.com/feeds/all', 'hardware', 'en'),
