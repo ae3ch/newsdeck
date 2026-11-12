@@ -54,4 +54,11 @@ export interface OgResponse {
  * erlaubt, und jeder Feed braucht zwei (lesen, schreiben).
  */
 export const MAX_FEEDS_PER_REQUEST = 24;
+/**
+ * So viele Feeds schickt der Browser pro Aufruf. Das ist weniger als erlaubt, weil sich alle Feeds eines
+ * Aufrufs die CPU-Zeit des Workers teilen (Gratis-Plan: 10 ms, sonst Fehler 1102). Die Pakete laufen
+ * parallel. MAX_FEEDS_PER_REQUEST bleibt höher, damit ältere, noch zwischengespeicherte App-Versionen
+ * weiter funktionieren.
+ */
+export const FEEDS_PER_BATCH = 6;
 export const MAX_OG_PER_REQUEST = 8;

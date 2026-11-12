@@ -1,7 +1,7 @@
 import { XMLParser } from 'fast-xml-parser';
 import type { Article, ParsedFeed } from '../../shared/types';
 
-export const MAX_ARTICLES = 20;
+export const MAX_ARTICLES = 10;
 const MAX_DESCRIPTION = 300;
 
 // Entities werden bewusst nicht vom XML-Parser aufgelöst (Schutz vor
@@ -233,11 +233,49 @@ function finish(title: string, siteUrl: string | undefined, articles: (Article |
   return { title: truncate(cleanTitle(title), 120) || undefined, siteUrl, articles: out };
 }
 
+/** So viele Einträge wertet parseFeed höchstens aus; die Reserve deckt Einträge ohne gültigen Link ab. */
+export const MAX_PARSED_ITEMS = MAX_ARTICLES + 5;
+
+/**
+ * Schneidet alle Einträge nach den ersten MAX_PARSED_ITEMS heraus, bevor der XML-Parser läuft. Manche
+ * Feeds enthalten Hunderte Einträge (OpenAI über 1300); sie vollständig zu parsen kostet mehr CPU-Zeit,
+ * als ein Worker im Gratis-Plan pro Aufruf hat (Fehler 1102). Gibt null zurück, wenn nichts zu kürzen ist.
+ */
+export function trimFeedItems(xml: string): string | null {
+  const re = /<\/(item|entry)\s*>/gi;
+  let match: RegExpExecArray | null = null;
+  for (let n = 0; n < MAX_PARSED_ITEMS; n++) {
+    match = re.exec(xml);
+    if (!match) return null;
+  }
+  const cut = re.lastIndex;
+  if (!re.exec(xml)) return null; // genau MAX_PARSED_ITEMS Einträge: nichts zu kürzen
+  // Den Abschluss des Dokuments behalten, damit das gekürzte XML wohlgeformt bleibt.
+  const closer = match![1].toLowerCase() === 'entry' ? /<\/feed\s*>/gi : /<\/(channel|rdf:RDF)\s*>/gi;
+  let tail = -1;
+  for (let m = closer.exec(xml); m; m = closer.exec(xml)) {
+    if (m.index >= cut && tail < 0) tail = m.index;
+  }
+  return tail < 0 ? null : xml.slice(0, cut) + xml.slice(tail);
+}
+
+function parseXml(xml: string): Obj {
+  const trimmed = trimFeedItems(xml);
+  if (trimmed !== null) {
+    try {
+      return parser.parse(trimmed) as Obj;
+    } catch {
+      // Kürzen ging schief (z. B. `</item>` in einem CDATA-Block): das ganze Dokument parsen
+    }
+  }
+  return parser.parse(xml) as Obj;
+}
+
 /** Parst RSS 2.0, RSS 1.0 (RDF) und Atom. Wirft einen Fehler, wenn das Dokument kein Feed ist. */
 export function parseFeed(xml: string, feedUrl?: string): ParsedFeed {
   let doc: Obj;
   try {
-    doc = parser.parse(xml) as Obj;
+    doc = parseXml(xml);
   } catch {
     throw new Error('Not a valid feed');
   }
@@ -257,7 +295,7 @@ export function parseFeed(xml: string, feedUrl?: string): ParsedFeed {
       flatText(channel.title),
       siteUrl,
       items
-        .slice(0, MAX_ARTICLES * 2)
+        .slice(0, MAX_PARSED_ITEMS)
         .map((it) =>
           buildArticle(it, rssLink(it, siteUrl ?? feedUrl), ['pubDate', 'dc:date', 'date'], [
             'description',
@@ -275,7 +313,7 @@ export function parseFeed(xml: string, feedUrl?: string): ParsedFeed {
       flatText(atom.title),
       siteUrl,
       entries
-        .slice(0, MAX_ARTICLES * 2)
+        .slice(0, MAX_PARSED_ITEMS)
         .map((e) =>
           buildArticle(e, atomLink(e, siteUrl ?? feedUrl), ['published', 'updated', 'dc:date'], [
             'summary',

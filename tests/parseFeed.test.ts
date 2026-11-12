@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decodeEntities, looksLikeFeed, parseFeed, toPlainText } from '../worker/_lib/parseFeed';
+import { decodeEntities, looksLikeFeed, parseFeed, toPlainText, trimFeedItems, MAX_ARTICLES, MAX_PARSED_ITEMS } from '../worker/_lib/parseFeed';
 import { findFeedLinks } from '../worker/_lib/discover';
 
 const RSS = `<?xml version="1.0" encoding="UTF-8"?>
@@ -116,10 +116,10 @@ describe('parseFeed', () => {
     expect(parseFeed(xml).articles[0].image).toBeUndefined();
   });
 
-  it('begrenzt auf 20 Artikel', () => {
+  it('begrenzt auf MAX_ARTICLES Artikel', () => {
     const items = Array.from({ length: 60 }, (_, i) => `<item><title>T${i}</title><link>https://e.com/${i}</link></item>`);
     const feed = parseFeed(`<rss><channel><title>x</title>${items.join('')}</channel></rss>`);
-    expect(feed.articles).toHaveLength(20);
+    expect(feed.articles).toHaveLength(MAX_ARTICLES);
   });
 
   it('lehnt Nicht-Feeds ab', () => {
@@ -171,5 +171,39 @@ describe('findFeedLinks', () => {
       'https://site.example/feed/',
       'https://other.example/atom.xml',
     ]);
+  });
+});
+
+describe('trimFeedItems', () => {
+  const rssItems = (n: number) =>
+    Array.from({ length: n }, (_, i) => `<item><title>Nr ${i}</title><link>https://example.com/${i}</link></item>`).join('\n');
+  const rssDoc = (n: number) => `<?xml version="1.0"?><rss version="2.0"><channel><title>Lang</title>${rssItems(n)}</channel></rss>`;
+  const atomDoc = (n: number) =>
+    `<feed xmlns="http://www.w3.org/2005/Atom"><title>Lang</title>${Array.from(
+      { length: n },
+      (_, i) => `<entry><title>Nr ${i}</title><link href="https://example.com/${i}"/></entry>`,
+    ).join('')}</feed>`;
+
+  it('kürzt lange RSS- und Atom-Feeds und lässt den Dokumentabschluss stehen', () => {
+    const rss = trimFeedItems(rssDoc(300))!;
+    expect(rss.match(/<\/item>/g)).toHaveLength(MAX_PARSED_ITEMS);
+    expect(rss.endsWith('</channel></rss>')).toBe(true);
+    const atom = trimFeedItems(atomDoc(300))!;
+    expect(atom.match(/<\/entry>/g)).toHaveLength(MAX_PARSED_ITEMS);
+    expect(atom.endsWith('</feed>')).toBe(true);
+  });
+
+  it('lässt kurze Feeds unverändert', () => {
+    expect(trimFeedItems(rssDoc(MAX_PARSED_ITEMS))).toBeNull();
+    expect(trimFeedItems(rssDoc(5))).toBeNull();
+  });
+
+  it('liefert für lange Feeds dasselbe Ergebnis wie ohne Kürzen', () => {
+    const feed = parseFeed(rssDoc(300), 'https://example.com/feed');
+    expect(feed.articles).toHaveLength(MAX_ARTICLES);
+    expect(feed.articles[0].title).toBe('Nr 0');
+    expect(parseFeed(atomDoc(300)).articles.map((a) => a.title)).toEqual(
+      Array.from({ length: MAX_ARTICLES }, (_, i) => `Nr ${i}`),
+    );
   });
 });

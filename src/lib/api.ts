@@ -1,5 +1,5 @@
 import {
-  MAX_FEEDS_PER_REQUEST,
+  FEEDS_PER_BATCH,
   MAX_OG_PER_REQUEST,
   type OgResponse,
   type DiscoverResponse,
@@ -52,7 +52,7 @@ export async function fetchFeeds(
   signal?: AbortSignal,
   versions: Record<string, string | undefined> = {},
 ): Promise<FeedsFetchResult> {
-  const batches = chunk(urls, MAX_FEEDS_PER_REQUEST);
+  const batches = chunk(urls, FEEDS_PER_BATCH);
   const settled = await Promise.allSettled(
     batches.map((batch) => {
       const qs = batch.map((u) => `u=${encodeURIComponent(u)}&v=${encodeURIComponent(versions[u] ?? '')}`).join('&');
