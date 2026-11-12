@@ -1,0 +1,32 @@
+import { useEffect, useState } from 'react';
+import { ArrowUpIcon } from './icons';
+
+const SHOW_AFTER = 600;
+
+/** Schaltfläche unten rechts, die nach dem Herunterscrollen erscheint und zum Seitenanfang führt. */
+export function BackToTop() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > SHOW_AFTER);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  if (!visible) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+      }}
+      aria-label="Back to top"
+      title="Back to top"
+      className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-[max(1.25rem,env(safe-area-inset-right))] z-40 grid h-11 w-11 place-items-center rounded-full border border-line bg-surface text-ink shadow-lg transition-colors hover:border-accent hover:text-accent"
+    >
+      <ArrowUpIcon width={20} height={20} />
+    </button>
+  );
+}
