@@ -7,6 +7,17 @@ const configured = (import.meta.env?.VITE_IMAGE_PROXY as string | undefined)?.tr
 export const IMAGE_PROXY = configured === 'off' ? '' : configured || 'https://wsrv.nl/';
 
 /**
+ * WordPress sites often serve images through Jetpack's CDN (i0.wp.com to i3.wp.com), with the
+ * original host as the first path segment: https://i0.wp.com/www.example.com/wp-content/a.jpg.
+ * wsrv.nl blocks wp.com ("Domain or TLD blocked by policy"), so the image is fetched from the
+ * original host instead. The query string stays, as it does no harm there.
+ */
+export function unwrapWordPressCdn(src: string): string {
+  const match = /^https?:\/\/i[0-3]\.wp\.com\/([^/?#]+\.[^/?#]+)(\/[^#]*)$/i.exec(src);
+  return match ? `https://${match[1]}${match[2]}` : src;
+}
+
+/**
  * Address of a downscaled version (WebP, cropped). `width`/`height` in CSS pixels;
  * double the resolution is requested for sharp rendering on HiDPI screens.
  * Returns null when no image service is configured or the address does not fit.
@@ -14,7 +25,7 @@ export const IMAGE_PROXY = configured === 'off' ? '' : configured || 'https://ws
 export function thumbUrl(src: string, width: number, height: number, proxy = IMAGE_PROXY): string | null {
   if (!proxy || !/^https?:\/\//i.test(src)) return null;
   const q = new URLSearchParams({
-    url: src,
+    url: unwrapWordPressCdn(src),
     w: String(width * 2),
     h: String(height * 2),
     fit: 'cover',

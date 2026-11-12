@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { extractOgImage } from '../worker/_lib/ogImage';
 import type { Source } from '../src/lib/config';
-import { thumbUrl } from '../src/lib/image';
+import { thumbUrl, unwrapWordPressCdn } from '../src/lib/image';
 import { rankTopStories, tokenize } from '../src/lib/topStories';
 
 const NOW = Date.parse('2026-11-11T12:00:00Z');
@@ -106,5 +106,15 @@ describe('thumbUrl', () => {
     expect(thumbUrl('https://cdn.example/a.jpg', 76, 56, '')).toBeNull();
     expect(thumbUrl('data:image/png;base64,AAAA', 76, 56, 'https://wsrv.nl/')).toBeNull();
     expect(thumbUrl('/relativ.jpg', 76, 56, 'https://wsrv.nl/')).toBeNull();
+  });
+  it('fetches images behind the WordPress CDN from the original host, since wsrv.nl blocks wp.com', () => {
+    const src = 'https://i0.wp.com/www.omgubuntu.co.uk/wp-content/uploads/2024/02/nautilus-file-manager-logo.jpg?resize=406%2C232&ssl=1';
+    const url = new URL(thumbUrl(src, 80, 60, 'https://wsrv.nl/')!);
+    expect(url.searchParams.get('url')).toBe(
+      'https://www.omgubuntu.co.uk/wp-content/uploads/2024/02/nautilus-file-manager-logo.jpg?resize=406%2C232&ssl=1',
+    );
+    expect(unwrapWordPressCdn('https://i3.wp.com/example.org/a.png')).toBe('https://example.org/a.png');
+    expect(unwrapWordPressCdn('https://i0.wp.com/no-host-here')).toBe('https://i0.wp.com/no-host-here');
+    expect(unwrapWordPressCdn('https://cdn.example/a.jpg')).toBe('https://cdn.example/a.jpg');
   });
 });
