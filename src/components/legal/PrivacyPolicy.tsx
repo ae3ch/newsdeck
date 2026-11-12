@@ -25,7 +25,7 @@ export function PrivacyPolicy() {
 
       <Section title="3. Hosting (Cloudflare)">
         <P>
-          The website and its server functions are hosted on Cloudflare Pages, a service of Cloudflare, Inc. Whenever
+          The website and its server functions are hosted on Cloudflare Workers, a service of Cloudflare, Inc. Whenever
           your browser requests a page or data, Cloudflare necessarily processes technical connection data: your IP
           address, date and time, the requested address, the amount of data transferred, and the browser and operating
           system identification your browser sends (user agent).

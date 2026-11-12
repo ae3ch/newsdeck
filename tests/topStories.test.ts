@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractOgImage } from '../functions/_lib/ogImage';
+import { extractOgImage } from '../worker/_lib/ogImage';
 import type { Source } from '../src/lib/config';
 import { thumbUrl } from '../src/lib/image';
 import { rankTopStories, tokenize } from '../src/lib/topStories';

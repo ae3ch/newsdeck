@@ -32,7 +32,7 @@ function serviceWorker(): Plugin {
 export default defineConfig({
   plugins: [react(), tailwindcss(), serviceWorker()],
   server: {
-    // Im Dev-Modus laufen die Pages Functions unter wrangler auf Port 8788.
+    // Im Dev-Modus läuft der Worker (API) unter wrangler auf Port 8788.
     proxy: { '/api': 'http://127.0.0.1:8788' },
   },
   test: { environment: 'node', include: ['tests/**/*.test.ts'] },

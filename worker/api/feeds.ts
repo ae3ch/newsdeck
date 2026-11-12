@@ -1,4 +1,5 @@
 import { MAX_FEEDS_PER_REQUEST, type FeedResult, type FeedsResponse } from '../../shared/types';
+import type { Handler } from '../_lib/handler';
 import { parseFeed } from '../_lib/parseFeed';
 import { FetchError, safeFetch, validatePublicUrl } from '../_lib/safeFetch';
 
@@ -72,7 +73,7 @@ async function loadFeed(
   return result;
 }
 
-export const onRequestGet: PagesFunction = async ({ request, waitUntil }) => {
+export const handleFeeds: Handler = async (request, waitUntil) => {
   // u = Feed-Adresse, v = dem Browser bekannte Version dieses Feeds (gleiche Position, optional).
   const params = new URL(request.url).searchParams;
   const versions = params.getAll('v');

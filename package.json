@@ -2,16 +2,39 @@
   "name": "newsdeck",
   "private": true,
   "version": "0.1.0",
+  "license": "MIT",
+  "description": "Self-hosted tech news dashboard: your own RSS and Atom feeds, refreshed every minute. Mobile-friendly PWA, deploys free to Cloudflare Workers.",
+  "keywords": [
+    "rss",
+    "rss-reader",
+    "feed-reader",
+    "atom",
+    "news-aggregator",
+    "tech-news",
+    "dashboard",
+    "self-hosted",
+    "pwa",
+    "cloudflare-workers"
+  ],
+  "homepage": "https://github.com/ae3ch/newsdeck#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ae3ch/newsdeck.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ae3ch/newsdeck/issues"
+  },
+  "author": "ae3ch",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k -n web,api \"vite\" \"wrangler pages dev dist --port 8788\"",
+    "dev": "concurrently -k -n web,api \"vite\" \"wrangler dev --port 8788\"",
     "predev": "mkdir -p dist",
     "build": "vite build",
-    "preview": "npm run build && wrangler pages dev dist --port 8788",
-    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p functions/tsconfig.json",
+    "preview": "npm run build && wrangler dev --port 8788",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p worker/tsconfig.json",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "deploy": "npm run build && wrangler pages deploy dist"
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -35,5 +58,8 @@
     "vite": "^8.3.8",
     "vitest": "^5.1.0",
     "wrangler": "^4.160.1"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

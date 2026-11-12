@@ -1,4 +1,5 @@
 import { MAX_OG_PER_REQUEST, type OgResponse } from '../../shared/types';
+import type { Handler } from '../_lib/handler';
 import { extractOgImage } from '../_lib/ogImage';
 import { safeFetch, validatePublicUrl } from '../_lib/safeFetch';
 
@@ -56,7 +57,7 @@ async function lookup(
   return image;
 }
 
-export const onRequestGet: PagesFunction = async ({ request, waitUntil }) => {
+export const handleOg: Handler = async (request, waitUntil) => {
   const urls = [...new Set(new URL(request.url).searchParams.getAll('u'))];
   if (urls.length === 0) return json({ error: 'Missing parameter u' }, 400);
   if (urls.length > MAX_OG_PER_REQUEST) return json({ error: `At most ${MAX_OG_PER_REQUEST} addresses per request` }, 400);

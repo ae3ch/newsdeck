@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { decodeEntities, looksLikeFeed, parseFeed, toPlainText } from '../functions/_lib/parseFeed';
-import { findFeedLinks } from '../functions/_lib/discover';
+import { decodeEntities, looksLikeFeed, parseFeed, toPlainText } from '../worker/_lib/parseFeed';
+import { findFeedLinks } from '../worker/_lib/discover';
 
 const RSS = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">

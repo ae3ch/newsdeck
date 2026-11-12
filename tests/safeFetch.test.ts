@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decodeBody, validatePublicUrl } from '../functions/_lib/safeFetch';
+import { decodeBody, validatePublicUrl } from '../worker/_lib/safeFetch';
 
 describe('validatePublicUrl', () => {
   it.each([

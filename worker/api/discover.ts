@@ -1,4 +1,5 @@
 import type { DiscoverCandidate, DiscoverResponse } from '../../shared/types';
+import type { Handler } from '../_lib/handler';
 import { COMMON_FEED_PATHS, findFeedLinks } from '../_lib/discover';
 import { looksLikeFeed, parseFeed } from '../_lib/parseFeed';
 import { FetchError, safeFetch, validatePublicUrl } from '../_lib/safeFetch';
@@ -40,7 +41,7 @@ async function probe(feedUrl: string): Promise<DiscoverCandidate | undefined> {
   }
 }
 
-export const onRequestGet: PagesFunction = async ({ request }) => {
+export const handleDiscover: Handler = async (request) => {
   const raw = new URL(request.url).searchParams.get('url') ?? '';
   let start: URL;
   try {
