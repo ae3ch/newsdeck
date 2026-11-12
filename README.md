@@ -11,13 +11,6 @@
   <img src=".github/screenshots/desktop-light.png" alt="Newsdeck dashboard on desktop: top stories of the day and one card per news source">
 </picture>
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset=".github/screenshots/mobile-dark.png">
-    <img src=".github/screenshots/mobile-light.png" width="300" alt="Newsdeck on a phone: swipeable top stories and source cards">
-  </picture>
-</p>
-
 <sub>Screenshots use invented sources and headlines.</sub>
 
 ## Features
