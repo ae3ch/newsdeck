@@ -10,6 +10,8 @@ import { TopicFilter } from './components/TopicFilter';
 import { TopStories } from './components/TopStories';
 import { SectionHeading, btnLink, btnPrimary, btnSecondary } from './components/ui';
 import type { NewSource } from './components/AddSourceForm';
+import { ExternalIcon, GitHubIcon } from './components/icons';
+import { SITE } from './data/site';
 import { useFeeds, useNow } from './hooks/useFeeds';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { useOgImages } from './hooks/useOgImages';
@@ -525,7 +527,7 @@ export default function App() {
         </Suspense>
       </main>
 
-      <footer className="page-x mx-auto max-w-[1440px] pb-[max(2.5rem,env(safe-area-inset-bottom))] text-xs leading-relaxed text-muted">
+      <footer className="page-x mx-auto max-w-[1440px] pb-[max(2.5rem,env(safe-area-inset-bottom))] text-xs sm:pb-[max(5.5rem,env(safe-area-inset-bottom))] leading-relaxed text-muted">
         <div className="flex flex-wrap items-start gap-x-8 gap-y-4 pt-6">
           <p className="min-w-0 flex-1 basis-72">
             Headlines, excerpts and images are collected automatically from publishers' public feeds and websites
@@ -534,18 +536,37 @@ export default function App() {
             We do not review or endorse this content and are not responsible
             for it or for the sites it links to.
           </p>
-          <nav aria-label="Legal" className="flex flex-wrap gap-x-5 gap-y-1 font-medium">
-            {LEGAL_DOCS.map((doc) => (
-              <a
-                key={doc.id}
-                href={VIEW_HASH[doc.id]}
-                aria-current={view === doc.id ? 'page' : undefined}
-                className="inline-flex min-h-11 items-center underline-offset-4 transition-colors duration-150 hover:text-ink hover:underline aria-[current=page]:text-ink sm:min-h-0"
-              >
-                {doc.title}
-              </a>
-            ))}
-          </nav>
+          <div className="flex flex-col items-start gap-3 sm:items-end">
+            <nav aria-label="Legal" className="flex flex-wrap gap-x-5 gap-y-1 font-medium">
+              {LEGAL_DOCS.map((doc) => (
+                <a
+                  key={doc.id}
+                  href={VIEW_HASH[doc.id]}
+                  aria-current={view === doc.id ? 'page' : undefined}
+                  className="inline-flex min-h-11 items-center underline-offset-4 transition-colors duration-150 hover:text-ink hover:underline aria-[current=page]:text-ink sm:min-h-0"
+                >
+                  {doc.title}
+                </a>
+              ))}
+            </nav>
+            <a
+              href={SITE.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-surface py-1.5 pl-2.5 pr-3.5 font-medium text-muted transition-colors duration-150 hover:border-ink hover:text-ink active:bg-sunken sm:min-h-0"
+            >
+              <GitHubIcon width="15" height="15" className="shrink-0 text-ink" />
+              <span>
+                Open source <span className="text-line" aria-hidden="true">·</span>{' '}
+                <span className="text-ink">View on GitHub</span>
+              </span>
+              <ExternalIcon
+                width="13"
+                height="13"
+                className="-ml-0.5 shrink-0 opacity-60 transition-transform duration-150 group-hover:-translate-y-px group-hover:translate-x-px group-hover:opacity-100"
+              />
+            </a>
+          </div>
         </div>
       </footer>
 

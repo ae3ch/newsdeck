@@ -13,4 +13,6 @@ export const SITE = {
   jurisdiction: '',
   /** Datum der letzten inhaltlichen Änderung der Rechtstexte. */
   legalUpdated: '12 November 2026',
+  /** Öffentliches Repository mit dem Quellcode, im Footer verlinkt. */
+  sourceUrl: 'https://github.com/ae3ch/newsdeck',
 };
