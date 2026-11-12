@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { MAX_MUTED, MAX_MUTED_LENGTH, cleanMutedWords } from '../../lib/mute';
 import { CloseIcon } from '../icons';
+import { btnPrimary, field } from '../ui';
 
 interface Props {
   words: string[];
@@ -32,13 +33,13 @@ export function MutedWords({ words, onChange }: Props) {
             onChange={(e) => setInput(e.target.value)}
             placeholder="e.g. deal, sponsored, Black Friday"
             disabled={full}
-            className="h-10 w-full rounded-lg border border-line bg-bg px-3 text-sm text-ink placeholder:text-muted disabled:opacity-50"
+            className={field}
           />
         </label>
         <button
           type="submit"
           disabled={full || !input.trim()}
-          className="h-10 shrink-0 rounded-lg bg-accent px-4 text-sm font-semibold text-accent-ink disabled:opacity-50"
+          className={btnPrimary}
         >
           Hide
         </button>
@@ -51,7 +52,7 @@ export function MutedWords({ words, onChange }: Props) {
                 type="button"
                 onClick={() => onChange(words.filter((x) => x !== w))}
                 aria-label={`Show headlines with "${w}" again`}
-                className="flex h-9 items-center gap-1.5 rounded-full border border-line bg-bg pl-3 pr-2 text-sm hover:border-danger hover:text-danger sm:h-8"
+                className="flex h-10 items-center gap-1.5 rounded-md border border-line bg-surface pl-3 pr-2 text-sm transition-colors duration-150 hover:border-danger hover:text-danger sm:h-8"
               >
                 {w}
                 <CloseIcon width={14} height={14} />

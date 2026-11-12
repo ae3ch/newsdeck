@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { discoverFeeds } from '../../lib/api';
 import type { Source } from '../../lib/config';
 import { Favicon } from '../Favicon';
-import { textButton } from './types';
+import { dangerButton, textButton } from './types';
+import { panelTitle } from '../ui';
 
 export interface BrokenSource {
   source: Source;
@@ -49,15 +50,15 @@ export function SourceHealth({ broken, now, onToggle, onRemove, onReplaceFeed }:
   };
 
   return (
-    <section aria-labelledby="sec-health" className="rounded-xl border border-danger/50 bg-surface p-4 sm:p-5">
-      <h2 id="sec-health" className="text-base font-semibold">
+    <section aria-labelledby="sec-health" className="rounded-lg border border-danger/50 border-l-4 border-l-danger bg-surface p-4 sm:p-6">
+      <h2 id="sec-health" className={panelTitle}>
         {broken.length === 1 ? '1 source has' : `${broken.length} sources have`} not loaded for over a day
       </h2>
       <p className="mt-1 text-sm text-muted">
         The site may have moved its feed or be blocking requests. Turn the source off, or search the website for its
         current feed.
       </p>
-      <ul className="mt-4 divide-y divide-line rounded-lg border border-line">
+      <ul className="mt-4 divide-y divide-line rounded-md border border-line">
         {broken.map(({ source: s, since, error }) => (
           <li key={s.id} className="px-3 py-3">
             <div className="flex items-center gap-2.5">
@@ -77,7 +78,7 @@ export function SourceHealth({ broken, now, onToggle, onRemove, onReplaceFeed }:
                   <button type="button" className={textButton} disabled={busy === s.id} onClick={() => findAgain(s)}>
                     {busy === s.id ? 'Searching …' : 'Find feed again'}
                   </button>
-                  <button type="button" className={`${textButton} hover:border-danger hover:text-danger`} onClick={() => onRemove(s.id)}>
+                  <button type="button" className={dangerButton} onClick={() => onRemove(s.id)}>
                     Remove
                   </button>
                 </>

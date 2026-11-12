@@ -3,6 +3,7 @@ import type { DiscoverCandidate } from '../../shared/types';
 import { discoverFeeds } from '../lib/api';
 import { hostOf, isHttpUrl } from '../lib/config';
 import { PlusIcon } from './icons';
+import { btnPrimary, btnSmall, field } from './ui';
 
 export interface NewSource {
   name: string;
@@ -71,13 +72,13 @@ export function AddSourceForm({ existingFeedUrls, onAdd }: Props) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="e.g. example.com or example.com/feed.xml"
-            className="h-10 w-full rounded-lg border border-line bg-bg px-3 text-sm text-ink placeholder:text-muted"
+            className={field}
           />
         </label>
         <button
           type="submit"
           disabled={busy || !input.trim()}
-          className="h-10 shrink-0 rounded-lg bg-accent px-4 text-sm font-semibold text-accent-ink disabled:opacity-50"
+          className={btnPrimary}
         >
           {busy ? 'Searching …' : 'Find feed'}
         </button>
@@ -94,7 +95,7 @@ export function AddSourceForm({ existingFeedUrls, onAdd }: Props) {
           {candidates.map((c) => {
             const exists = existingFeedUrls.has(c.feedUrl);
             return (
-              <li key={c.feedUrl} className="rounded-lg border border-line bg-bg p-3">
+              <li key={c.feedUrl} className="rounded-md border border-line bg-bg p-3">
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">{c.title}</p>
@@ -104,7 +105,7 @@ export function AddSourceForm({ existingFeedUrls, onAdd }: Props) {
                     type="button"
                     disabled={exists}
                     onClick={() => add(c)}
-                    className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-line bg-surface px-2.5 text-xs font-semibold hover:border-accent hover:text-accent disabled:opacity-50 disabled:hover:border-line disabled:hover:text-ink"
+                    className={btnSmall}
                   >
                     {!exists && <PlusIcon width={14} height={14} />}
                     {exists ? 'Already added' : 'Add'}

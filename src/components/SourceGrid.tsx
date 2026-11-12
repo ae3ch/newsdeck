@@ -43,7 +43,7 @@ function SortableCard({ item, extra, ...card }: { item: GridItem; extra: number 
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={isDragging ? 'relative z-20 opacity-80 shadow-2xl' : undefined}
+      className={isDragging ? 'relative z-20 rounded-lg opacity-90 shadow-2xl ring-2 ring-accent' : undefined}
     >
       <SourceCard
         source={item.source}
@@ -70,7 +70,7 @@ export function SourceGrid({ items, expanded, onMove, ...card }: Props) {
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
       <SortableContext items={items.map((i) => i.source.id)} strategy={rectSortingStrategy}>
-        <div className="grid grid-cols-1 items-start gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 items-start gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
           {items.map((item) => (
             <SortableCard key={item.source.id} item={item} extra={expanded[item.source.id] ?? 0} {...card} />
           ))}

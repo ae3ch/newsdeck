@@ -28,7 +28,8 @@ export function DisplaySettings({ settings, onSettings }: { settings: Settings; 
           onChange={(e) => onSettings({ articlesPerCard: Number(e.target.value) })}
           className="w-40 accent-(--accent)"
         />
-        <span className="w-6 font-mono tabular-nums">{settings.articlesPerCard}</span>
+        <span className="w-6 font-semibold tabular-nums">{settings.articlesPerCard}</span>
+        <span className="basis-full text-xs text-muted">On phones. Larger screens show {settings.articlesPerCard + 2} per card.</span>
       </label>
       <label className="flex cursor-pointer items-center gap-2.5">
         <input type="checkbox" checked={settings.showTopStories} onChange={(e) => onSettings({ showTopStories: e.target.checked })} className="h-4 w-4 accent-(--accent)" />

@@ -9,7 +9,7 @@ export function Favicon({ siteUrl, name, size = 18 }: { siteUrl: string; name: s
     return (
       <span
         aria-hidden="true"
-        className="grid shrink-0 place-items-center rounded bg-sunken font-mono text-[10px] font-semibold uppercase text-muted"
+        className="grid shrink-0 place-items-center rounded-sm bg-sunken text-[10px] font-bold uppercase text-muted"
         style={{ width: size, height: size }}
       >
         {name.trim().charAt(0) || '?'}

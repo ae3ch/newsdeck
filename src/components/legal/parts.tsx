@@ -4,8 +4,8 @@ import { SITE } from '../../data/site';
 export function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section>
-      <h2 className="text-lg font-semibold">{title}</h2>
-      <div className="mt-2 space-y-3 text-[15px] leading-relaxed text-ink/90">{children}</div>
+      <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+      <div className="mt-2.5 max-w-[68ch] space-y-3 text-[15px] leading-relaxed text-ink/90">{children}</div>
     </section>
   );
 }

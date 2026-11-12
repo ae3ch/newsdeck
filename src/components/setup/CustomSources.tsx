@@ -94,7 +94,7 @@ export function CustomSources({ sources, onAdd, onToggle, onRemove, brokenFeeds,
     <div>
       <AddSourceForm existingFeedUrls={new Set(sources.map((s) => s.feedUrl))} onAdd={onAdd} />
       {custom.length > 0 && (
-        <ul className="mt-4 divide-y divide-line rounded-lg border border-line">
+        <ul className="mt-4 divide-y divide-line rounded-md border border-line">
           {custom.map((s) => (
             <li key={s.id} className="flex items-center gap-2 py-1 pl-3 pr-1.5">
               <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 py-2.5 sm:py-1.5">

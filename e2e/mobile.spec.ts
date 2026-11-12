@@ -40,6 +40,13 @@ test('kein horizontales Scrollen in allen Ansichten, bei 390 und 320 px', async 
   }
 });
 
+test('erster Besuch zeigt direkt das Dashboard, ohne Einrichtung anzubieten', async ({ page }) => {
+  await page.goto('/');
+  await expect(cards(page).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Start guided setup' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Which languages do you read news in?' })).toHaveCount(0);
+});
+
 test('zeigt vier Artikel pro Quelle und lädt in Schritten nach', async ({ page }) => {
   await page.goto('/');
   const card = cards(page).first();
@@ -56,6 +63,20 @@ test('zeigt vier Artikel pro Quelle und lädt in Schritten nach', async ({ page 
   await expect(rows).toHaveCount(4);
   // Die zweite Karte blieb davon unberührt.
   await expect(cards(page).nth(1).locator('ol > li')).toHaveCount(4);
+});
+
+test('zeigt auf breiten Bildschirmen sechs Artikel pro Quelle', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/');
+  const card = cards(page).first();
+  await expect(card.locator('ol > li')).toHaveCount(6);
+  await card.getByRole('button', { name: 'Show 6 more' }).click();
+  await expect(card.locator('ol > li')).toHaveCount(12);
+
+  // Schmaler gezogen: wieder vier, wie auf dem Handy.
+  await card.getByRole('button', { name: 'Show less' }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(card.locator('ol > li')).toHaveCount(4);
 });
 
 test('Vorschaubilder werden nur für sichtbare Artikel angefragt', async ({ page, ogRequests }) => {
@@ -86,6 +107,36 @@ test('Suche klappt auf dem Handy auf und filtert die Artikel', async ({ page }) 
   await page.getByRole('button', { name: 'Close search' }).click();
   await expect(search).toBeHidden();
   await expect(cards(page).first().locator('ol > li')).toHaveCount(4);
+});
+
+test.describe('mit Maus am Desktop', () => {
+  test.use({ viewport: { width: 1280, height: 900 }, isMobile: false, hasTouch: false });
+
+  test('Suche ist ein Symbol, das beim Überfahren aufklappt und den Fokus erhält', async ({ page }) => {
+    await page.goto('/');
+    const search = page.getByRole('searchbox');
+    const width = () => search.evaluate((el) => el.getBoundingClientRect().width);
+    await expect(cards(page).first()).toBeVisible();
+    await expect.poll(width).toBeLessThan(50);
+
+    await search.hover();
+    await expect(search).toBeFocused();
+    await expect.poll(width).toBeGreaterThan(200);
+    await page.keyboard.type('headline 1');
+    // Mit Suchbegriff bleibt das Feld offen, auch ohne Maus darüber.
+    await page.mouse.move(640, 600);
+    await expect.poll(width).toBeGreaterThan(200);
+
+    // Escape leert und schliesst; ohne Begriff klappt es beim Verlassen von selbst zu.
+    await page.keyboard.press('Escape');
+    await expect(search).toHaveValue('');
+    await expect.poll(width).toBeLessThan(50);
+    await search.hover();
+    await expect(search).toBeFocused();
+    await page.mouse.move(640, 600);
+    await expect(search).not.toBeFocused();
+    await expect.poll(width).toBeLessThan(50);
+  });
 });
 
 test('Themen-Filter zeigt nur die Quellen eines Themas', async ({ page }) => {
@@ -162,7 +213,7 @@ test('Homescreen-Link bringt das Layout auf ein neues Gerät und in die App', as
   await app.goto(link);
   await expect(cards(app).first().locator('h2')).toHaveText('Mein Blog');
   await expect(cards(app).nth(1).locator('h2')).toHaveText('Golem.de');
-  await expect(app.getByText('New here?')).toBeHidden();
+  await expect(app.getByRole('button', { name: 'Start guided setup' })).toBeHidden();
   await expect(app.getByRole('heading', { name: 'Add Newsdeck to your home screen' })).toBeHidden();
 
   // Zweiter Start, nachdem das Layout in der App geändert wurde: Die Startadresse zählt nicht mehr.

@@ -4,6 +4,7 @@ import { isAndroid, isIos, useInstallPrompt } from '../../lib/install';
 import { ShareIcon } from '../icons';
 import { QrCode } from '../QrCode';
 import { primaryButton, textButton } from './types';
+import { pageTitle, panel, panelTitle } from '../ui';
 
 interface Props {
   /** Das Layout, das die Adresse dieser Seite trägt. */
@@ -16,7 +17,7 @@ interface Props {
 }
 
 function Steps({ children }: { children: ReactNode }) {
-  return <ol className="list-decimal space-y-2 pl-5 text-[15px] leading-relaxed marker:font-mono marker:text-muted">{children}</ol>;
+  return <ol className="list-decimal space-y-2 pl-5 text-[15px] leading-relaxed marker:font-semibold marker:text-accent">{children}</ol>;
 }
 
 /**
@@ -49,8 +50,8 @@ export function InstallView({ config, pending, adopted, onDone }: Props) {
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Add Newsdeck to your home screen</h1>
-        <p className="mt-1.5 text-[15px] leading-relaxed text-muted">
+        <h1 className={pageTitle}>Add Newsdeck to your home screen</h1>
+        <p className="mt-2 text-[15px] leading-relaxed text-muted">
           The address of this page carries {pending ? 'a' : 'your'} layout: {active.length} active{' '}
           {active.length === 1 ? 'source' : 'sources'}
           {custom > 0 && `, ${custom} of them ${pending ? 'custom' : 'your own'}`}. An icon created from this page opens Newsdeck with exactly these
@@ -59,8 +60,8 @@ export function InstallView({ config, pending, adopted, onDone }: Props) {
         </p>
       </div>
 
-      <section aria-labelledby="install-steps" className="rounded-xl border border-line bg-surface p-4 sm:p-5">
-        <h2 id="install-steps" className="mb-3 text-base font-semibold">
+      <section aria-labelledby="install-steps" className={panel}>
+        <h2 id="install-steps" className={`${panelTitle} mb-4`}>
           {ios ? 'On this iPhone or iPad' : android ? 'On this Android device' : 'On your phone or tablet'}
         </h2>
         {ios ? (
@@ -105,8 +106,8 @@ export function InstallView({ config, pending, adopted, onDone }: Props) {
         )}
       </section>
 
-      <section aria-labelledby="install-link" className="rounded-xl border border-line bg-surface p-4 sm:p-5">
-        <h2 id="install-link" className="text-base font-semibold">
+      <section aria-labelledby="install-link" className={panel}>
+        <h2 id="install-link" className={panelTitle}>
           Your home-screen link
         </h2>
         <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:gap-5">
@@ -121,7 +122,7 @@ export function InstallView({ config, pending, adopted, onDone }: Props) {
               value={url}
               aria-label="Home-screen link"
               onFocus={(e) => e.target.select()}
-              className="mt-3 h-10 w-full rounded-lg border border-line bg-bg px-3 font-mono text-xs text-muted"
+              className="mt-3 h-11 w-full rounded-md border border-line bg-sunken px-3 font-mono text-xs text-muted sm:h-9"
             />
             <div className="mt-3 flex flex-wrap gap-2">
               <button type="button" className={textButton} onClick={copy}>

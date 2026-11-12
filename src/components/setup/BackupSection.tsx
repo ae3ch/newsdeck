@@ -1,7 +1,7 @@
 import { useRef, useState, type ChangeEvent } from 'react';
 import { encodeShareHash, exportConfig, importConfig, type DashboardConfig } from '../../lib/config';
 import { QrCode } from '../QrCode';
-import { textButton } from './types';
+import { dangerButton, textButton } from './types';
 
 interface Props {
   config: DashboardConfig;
@@ -68,7 +68,7 @@ export function BackupSection({ config, onReplace, onReset }: Props) {
         <button type="button" className={textButton} onClick={share}>
           Create link
         </button>
-        <button type="button" className={`${textButton} hover:border-danger hover:text-danger`} onClick={reset}>
+        <button type="button" className={dangerButton} onClick={reset}>
           Reset
         </button>
         <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={onFile} />
@@ -86,7 +86,7 @@ export function BackupSection({ config, onReplace, onReset }: Props) {
               value={shareUrl}
               aria-label="Link to this layout"
               onFocus={(e) => e.target.select()}
-              className="mt-3 h-10 w-full rounded-lg border border-line bg-bg px-3 font-mono text-xs text-muted sm:h-9"
+              className="mt-3 h-11 w-full rounded-md border border-line bg-sunken px-3 font-mono text-xs text-muted sm:h-9"
             />
           </div>
         </div>

@@ -1,4 +1,6 @@
 import { LANGUAGES, type DashboardConfig, type Lang } from '../../lib/config';
+import { CheckIcon } from '../icons';
+import { kicker } from '../ui';
 
 interface Props {
   config: DashboardConfig;
@@ -27,23 +29,23 @@ export function LanguagePicker({ config, onChange }: Props) {
                   // Reihenfolge wie in LANGUAGES halten, damit gespeicherte Layouts vergleichbar bleiben.
                   onChange(LANGUAGES.map((l) => l.id).filter((id) => (id === lang.id ? !on : selected.includes(id))));
                 }}
-                className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-colors ${
-                  on ? 'border-accent bg-accent/10' : 'border-line bg-bg hover:border-muted'
+                className={`flex w-full items-center gap-3 rounded-lg border p-4 text-left transition-colors duration-150 ${
+                  on ? 'border-accent bg-accent/[0.07] ring-1 ring-accent' : 'border-line bg-surface hover:border-ink'
                 } ${only ? 'cursor-default' : ''}`}
               >
                 <span
                   aria-hidden="true"
-                  className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border text-xs font-bold ${
-                    on ? 'border-accent bg-accent text-accent-ink' : 'border-line bg-surface text-transparent'
+                  className={`grid h-5 w-5 shrink-0 place-items-center rounded border ${
+                    on ? 'border-accent bg-accent text-accent-ink' : 'border-field bg-surface text-transparent'
                   }`}
                 >
-                  ✓
+                  <CheckIcon width={14} height={14} />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-base font-semibold">{lang.label}</span>
+                  <span className="block text-base font-semibold leading-tight">{lang.label}</span>
                   <span className="block text-sm text-muted">{total} news sites in the catalogue</span>
                 </span>
-                <span className="font-mono text-xs uppercase text-muted">{lang.id}</span>
+                <span className={`${kicker} text-muted`}>{lang.id}</span>
               </button>
             </li>
           );

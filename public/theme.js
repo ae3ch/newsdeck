@@ -12,5 +12,5 @@
   document.documentElement.classList.add('dark');
   // Farbe der Browser- und Statusleiste; das helle Gegenstück steht in index.html.
   var meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', '#0e0f11');
+  if (meta) meta.setAttribute('content', '#0c0d0f');
 })();

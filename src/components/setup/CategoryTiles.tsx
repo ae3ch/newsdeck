@@ -1,5 +1,7 @@
 import { CATEGORIES } from '../../data/defaultSources';
 import type { Source } from '../../lib/config';
+import { CheckIcon } from '../icons';
+import { kicker } from '../ui';
 
 interface Props {
   sources: Source[];
@@ -21,19 +23,19 @@ export function CategoryTiles({ sources, onSetMany }: Props) {
               type="button"
               aria-pressed={on}
               onClick={() => onSetMany(members.map((s) => s.id), !on)}
-              className={`flex h-full w-full min-w-0 flex-col rounded-xl border p-4 text-left transition-colors ${
-                on ? 'border-accent bg-accent/10' : 'border-line bg-bg hover:border-muted'
+              className={`flex h-full w-full min-w-0 flex-col rounded-lg border p-4 text-left transition-colors duration-150 ${
+                on ? 'border-accent bg-accent/[0.07] ring-1 ring-accent' : 'border-line bg-surface hover:border-ink'
               }`}
             >
               <span className="flex items-center justify-between gap-3">
-                <span className="text-base font-semibold">{cat.label}</span>
+                <span className="text-base font-semibold leading-tight">{cat.label}</span>
                 <span
                   aria-hidden="true"
-                  className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border text-xs font-bold ${
-                    on ? 'border-accent bg-accent text-accent-ink' : 'border-line bg-surface text-transparent'
+                  className={`grid h-5 w-5 shrink-0 place-items-center rounded border ${
+                    on ? 'border-accent bg-accent text-accent-ink' : 'border-field bg-surface text-transparent'
                   }`}
                 >
-                  ✓
+                  <CheckIcon width={14} height={14} />
                 </span>
               </span>
               <span className="mt-1 text-sm text-muted">{cat.description}</span>
@@ -44,7 +46,7 @@ export function CategoryTiles({ sources, onSetMany }: Props) {
                   .join(', ')}
                 {members.length > 4 ? ' …' : ''}
               </span>
-              <span className={`mt-2 font-mono text-[11px] uppercase tracking-wider ${on ? 'text-accent' : 'text-muted'}`}>
+              <span className={`${kicker} mt-2 ${on ? 'text-accent' : 'text-muted'}`}>
                 {on
                   ? `${active} of ${members.length} active`
                   : `${members.length} ${members.length === 1 ? 'source' : 'sources'}`}

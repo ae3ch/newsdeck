@@ -7,6 +7,7 @@ import { Favicon } from './Favicon';
 import { SaveButton } from './SaveButton';
 import { SmartImage } from './SmartImage';
 import { ExternalIcon, GripIcon } from './icons';
+import { kicker } from './ui';
 
 interface Props {
   source: Source;
@@ -32,10 +33,10 @@ interface Props {
 
 function Skeleton({ rows, images }: { rows: number; images: boolean }) {
   return (
-    <div className="animate-pulse space-y-4 px-4 py-4" aria-hidden="true">
+    <div className="animate-pulse space-y-5 px-4 py-4" aria-hidden="true">
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="flex gap-3">
-          {images && <div className="h-14 w-[4.75rem] shrink-0 rounded-md bg-sunken" />}
+          {images && <div className="h-[3.75rem] w-20 shrink-0 rounded bg-sunken" />}
           <div className="flex-1 space-y-2 py-1">
             <div className="h-3 rounded bg-sunken" style={{ width: `${92 - (i % 3) * 14}%` }} />
             <div className="h-2.5 w-16 rounded bg-sunken" />
@@ -48,14 +49,14 @@ function Skeleton({ rows, images }: { rows: number; images: boolean }) {
 
 function Thumb({ src, name }: { src: string | undefined; name: string }) {
   return (
-    <span className="grid h-14 w-[4.75rem] shrink-0 place-items-center overflow-hidden rounded-md bg-sunken">
+    <span className="grid h-[3.75rem] w-20 shrink-0 place-items-center overflow-hidden rounded bg-sunken">
       <SmartImage
         src={src}
-        width={76}
-        height={56}
+        width={80}
+        height={60}
         className="h-full w-full object-cover"
         fallback={
-          <span aria-hidden="true" className="font-mono text-sm font-semibold uppercase text-muted/50">
+          <span aria-hidden="true" className="font-mono text-base font-medium uppercase text-muted/60">
             {name.trim().charAt(0)}
           </span>
         }
@@ -81,21 +82,21 @@ export const SourceCard = memo(function SourceCard(p: Props) {
   };
 
   return (
-    <article ref={card} className="flex scroll-mt-20 flex-col overflow-hidden rounded-xl border border-line bg-surface">
-      <header className="flex items-center gap-2 border-b border-line py-1 pl-1 pr-1 sm:py-2.5 sm:pl-2 sm:pr-3">
+    <article ref={card} className="flex scroll-mt-20 flex-col overflow-hidden rounded-lg border border-line bg-surface">
+      <header className="flex items-center gap-2 border-b border-line py-0.5 pl-1 pr-1 sm:py-2 sm:pl-1.5 sm:pr-2">
         <button
           type="button"
           {...p.handleProps}
           aria-label={`Move ${p.source.name}`}
           title="Drag to reorder"
-          className="grid h-10 w-8 shrink-0 cursor-grab touch-none place-items-center rounded text-muted hover:bg-sunken sm:text-muted/60 hover:text-ink active:cursor-grabbing sm:h-7 sm:w-6"
+          className="grid h-11 w-8 shrink-0 cursor-grab touch-none place-items-center rounded text-muted transition-colors duration-150 hover:bg-sunken hover:text-ink active:cursor-grabbing sm:h-8 sm:w-6 sm:text-muted/70"
         >
           <GripIcon width={16} height={16} />
         </button>
         <Favicon siteUrl={p.source.siteUrl} name={p.source.name} />
-        <h2 className="min-w-0 flex-1 truncate text-[15px] font-semibold">{p.source.name}</h2>
+        <h2 className="min-w-0 flex-1 truncate text-[15px] font-semibold tracking-tight">{p.source.name}</h2>
         {categoryLabel(p.source.category) && (
-          <span className="hidden shrink-0 font-mono text-[10px] uppercase tracking-wider text-muted sm:inline">
+          <span className={`${kicker} hidden shrink-0 text-muted sm:inline`}>
             {categoryLabel(p.source.category)}
           </span>
         )}
@@ -105,7 +106,7 @@ export const SourceCard = memo(function SourceCard(p: Props) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`Open ${p.source.name}`}
-            className="grid h-10 w-10 shrink-0 place-items-center text-muted hover:text-accent sm:h-auto sm:w-auto"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-md text-muted transition-colors duration-150 hover:bg-sunken hover:text-accent sm:h-8 sm:w-8"
           >
             <ExternalIcon width={15} height={15} />
           </a>
@@ -113,7 +114,7 @@ export const SourceCard = memo(function SourceCard(p: Props) {
       </header>
 
       {p.error && (
-        <p className="border-b border-line bg-sunken px-4 py-2 text-xs text-danger">
+        <p className="border-b border-line bg-danger/5 px-4 py-2 text-xs text-danger">
           {all.length > 0 ? 'Update failed, showing the last known articles' : 'Feed unavailable'}: {p.error}
         </p>
       )}
@@ -129,7 +130,7 @@ export const SourceCard = memo(function SourceCard(p: Props) {
       ) : (
         <ol className="divide-y divide-line">
           {visible.map((a) => (
-            <li key={a.link} className="group/row flex transition-colors hover:bg-sunken">
+            <li key={a.link} className="group/row flex transition-colors duration-150 hover:bg-sunken/70">
               <a
                 href={a.link}
                 target="_blank"
@@ -137,19 +138,19 @@ export const SourceCard = memo(function SourceCard(p: Props) {
                 title={a.description || undefined}
                 onClick={() => p.onRead(a.link)}
                 onAuxClick={() => p.onRead(a.link)}
-                className="group flex min-w-0 flex-1 gap-3 py-3 pl-4 sm:py-2.5"
+                className="group flex min-w-0 flex-1 gap-3.5 py-3.5 pl-4 sm:py-3"
               >
                 {p.showImages && <Thumb src={a.image} name={p.source.name} />}
                 <span className="min-w-0 flex-1">
                   <span
-                    className={`line-clamp-3 text-[15px] font-medium leading-snug group-hover:text-accent group-visited:text-muted sm:text-sm ${
+                    className={`headline line-clamp-3 text-base font-medium leading-snug tracking-[-0.01em] transition-colors duration-150 group-hover:text-accent group-visited:text-muted sm:text-[15px] ${
                       p.isRead(a.link) ? 'text-muted' : 'text-ink'
                     }`}
                   >
                     {a.title}
                   </span>
                   {a.pubDate && (
-                    <time dateTime={a.pubDate} className="mt-1 block text-xs text-muted">
+                    <time dateTime={a.pubDate} className="mt-1.5 block font-mono text-[11px] text-muted">
                       {relativeTime(a.pubDate, p.now)}
                     </time>
                   )}
@@ -160,7 +161,7 @@ export const SourceCard = memo(function SourceCard(p: Props) {
                 saved={p.isSaved(a.link)}
                 title={a.title}
                 onToggle={() => p.onSave(a, p.source)}
-                className={`mt-1.5 h-10 w-11 sm:mt-1 sm:h-8 sm:w-10 ${
+                className={`mt-2 h-11 w-11 sm:mt-2 sm:h-8 sm:w-10 ${
                   p.isSaved(a.link) ? '' : 'pointer-fine:opacity-0 pointer-fine:group-hover/row:opacity-100 focus-visible:opacity-100'
                 }`}
               />
@@ -170,12 +171,12 @@ export const SourceCard = memo(function SourceCard(p: Props) {
       )}
 
       {(hidden > 0 || extra > 0) && (
-        <div className="flex border-t border-line text-sm font-medium text-muted sm:text-xs">
+        <div className="flex border-t border-line text-sm font-medium text-muted sm:text-[13px]">
           {hidden > 0 && (
             <button
               type="button"
               onClick={() => p.onMore(p.source.id, p.limit)}
-              className="min-h-11 flex-1 px-4 text-left hover:bg-sunken hover:text-ink sm:min-h-8"
+              className="min-h-11 flex-1 px-4 text-left transition-colors duration-150 hover:bg-sunken hover:text-ink sm:min-h-9"
             >
               Show {Math.min(p.limit, hidden)} more
             </button>
@@ -184,7 +185,7 @@ export const SourceCard = memo(function SourceCard(p: Props) {
             <button
               type="button"
               onClick={collapse}
-              className={`min-h-11 px-4 hover:bg-sunken hover:text-ink sm:min-h-8 ${hidden > 0 ? '' : 'flex-1 text-left'}`}
+              className={`min-h-11 px-4 transition-colors duration-150 hover:bg-sunken hover:text-ink sm:min-h-9 ${hidden > 0 ? '' : 'flex-1 text-left'}`}
             >
               Show less
             </button>

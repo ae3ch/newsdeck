@@ -46,7 +46,6 @@ export interface DashboardConfig {
 }
 
 export const STORAGE_KEY = 'tech-news:config';
-export const ONBOARDED_KEY = 'tech-news:onboarded';
 export const MAX_SOURCES = 100;
 export const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
@@ -308,24 +307,5 @@ export function hasStoredConfig(): boolean {
     return localStorage.getItem(STORAGE_KEY) !== null;
   } catch {
     return false;
-  }
-}
-
-// --- Merker, ob die geführte Einrichtung schon angeboten bzw. erledigt wurde ---
-
-/** true beim allerersten Besuch: noch kein Layout gespeichert und Einrichtung nie abgeschlossen oder abgelehnt. */
-export function isFirstVisit(): boolean {
-  try {
-    return localStorage.getItem(STORAGE_KEY) === null && localStorage.getItem(ONBOARDED_KEY) === null;
-  } catch {
-    return false;
-  }
-}
-
-export function markOnboarded(): void {
-  try {
-    localStorage.setItem(ONBOARDED_KEY, '1');
-  } catch {
-    // ohne Speicher erscheint der Hinweis beim nächsten Besuch erneut
   }
 }

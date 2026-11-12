@@ -8,8 +8,10 @@ import type { SetupActions } from './components/setup/types';
 import { SourceGrid, type GridItem } from './components/SourceGrid';
 import { TopicFilter } from './components/TopicFilter';
 import { TopStories } from './components/TopStories';
+import { SectionHeading, btnLink, btnPrimary, btnSecondary } from './components/ui';
 import type { NewSource } from './components/AddSourceForm';
 import { useFeeds, useNow } from './hooks/useFeeds';
+import { useMediaQuery } from './hooks/useMediaQuery';
 import { useOgImages } from './hooks/useOgImages';
 import { useReadLinks } from './hooks/useReadLinks';
 import { useSaved } from './hooks/useSaved';
@@ -20,11 +22,9 @@ import {
   defaultConfig,
   encodeInstallHash,
   hasStoredConfig,
-  isFirstVisit,
   isInstallHash,
   isVisible,
   loadConfig,
-  markOnboarded,
   newSourceId,
   sameLayout,
   saveConfig,
@@ -47,6 +47,9 @@ const LegalView = lazy(() => import('./components/legal/LegalView').then((m) => 
 const SavedView = lazy(() => import('./components/SavedView').then((m) => ({ default: m.SavedView })));
 
 const TOP_STORY_COUNT = 6;
+/** Ab dieser Breite stehen die Karten in mehreren Spalten (md); dort zeigt jede Karte mehr Artikel. */
+const WIDE_SCREEN = '(min-width: 48rem)';
+const WIDE_EXTRA_ARTICLES = 2;
 const TOP_STORY_AGE_STEP = 5 * 60_000;
 /** Obergrenze für Bild-Nachfragen pro Durchlauf (sichtbare Artikel zuerst). */
 const MAX_OG_LOOKUPS = 240;
@@ -59,7 +62,7 @@ function moveItem<T>(list: T[], from: number, to: number): T[] {
   return next;
 }
 
-const THEME_COLOR = { light: '#f4f2ec', dark: '#0e0f11' };
+const THEME_COLOR = { light: '#f5f4f0', dark: '#0c0d0f' };
 
 /**
  * Start über einen Homescreen-Link auf einem Gerät ohne gespeichertes Layout (neues Gerät oder
@@ -69,7 +72,6 @@ const adoptedAtStart = (() => {
   const linked = hasStoredConfig() ? null : decodeInstallHash(window.location.hash);
   if (!linked) return false;
   saveConfig(linked);
-  markOnboarded();
   return true;
 })();
 
@@ -140,7 +142,6 @@ export default function App() {
   const [config, setConfig] = useState<DashboardConfig>(loadConfig);
   const [query, setQuery] = useState('');
   const [view, navigate] = useView();
-  const [showWelcome, setShowWelcome] = useState(isFirstVisit);
   const [shared, setShared] = useState<DashboardConfig | null>(() => linkedLayout(window.location.hash, config));
   // Der Hinweis auf die Übernahme gilt nur, solange die Seite aus dem Link offen ist.
   const [adopted, setAdopted] = useState(adoptedAtStart);
@@ -197,7 +198,10 @@ export default function App() {
   const { feeds, loading, error, updatedAt, health, refresh } = useFeeds(feedUrls);
 
   const needle = query.trim().toLowerCase();
-  const { articlesPerCard, showImages, showTopStories } = config.settings;
+  const { showImages, showTopStories } = config.settings;
+  // Die Einstellung gilt für das Handy; auf breiteren Bildschirmen zwei Artikel mehr (Standard: 4 bzw. 6).
+  const wide = useMediaQuery(WIDE_SCREEN);
+  const articlesPerCard = config.settings.articlesPerCard + (wide ? WIDE_EXTRA_ARTICLES : 0);
   const { isRead, markRead } = useReadLinks();
   const { saved, isSaved, toggle: toggleSaved, clear: clearSaved } = useSaved();
   const onSave = useCallback(
@@ -367,14 +371,8 @@ export default function App() {
     [],
   );
 
-  const dismissWelcome = () => {
-    markOnboarded();
-    setShowWelcome(false);
-  };
-  const startOnboarding = () => {
-    dismissWelcome();
-    navigate('onboarding');
-  };
+  // Die geführte Einrichtung ist freiwillig und öffnet sich nur auf Wunsch.
+  const startOnboarding = () => navigate('onboarding');
   const actions: SetupActions = {
     onToggle,
     onSetMany,
@@ -412,9 +410,9 @@ export default function App() {
         onOpenSaved={() => navigate(view === 'saved' ? 'dashboard' : 'saved')}
       />
 
-      <main className="page-x mx-auto max-w-[1400px] py-4 sm:py-6">
+      <main className="page-x mx-auto max-w-[1440px] pb-8 pt-5 sm:pb-12 sm:pt-8">
         {shared && (
-          <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-accent bg-surface px-4 py-3 text-sm">
+          <div className="mb-8 flex flex-wrap items-center gap-3 rounded-lg border border-accent/60 border-l-4 border-l-accent bg-surface px-4 py-3 text-sm">
             <p className="min-w-0 flex-1 basis-64">
               This link contains a layout with {shared.sources.filter((s) => s.enabled).length} active sources. Applying
               it replaces your current layout in this browser.
@@ -422,7 +420,7 @@ export default function App() {
             </p>
             <button
               type="button"
-              className="h-10 rounded-lg bg-accent px-3 font-semibold text-accent-ink sm:h-9"
+              className={btnPrimary}
               onClick={() => {
                 setConfig(shared);
                 settleShared();
@@ -430,13 +428,13 @@ export default function App() {
             >
               Apply
             </button>
-            <button type="button" className="h-10 rounded-lg border border-line px-3 font-medium sm:h-9" onClick={settleShared}>
+            <button type="button" className={btnSecondary} onClick={settleShared}>
               {view === 'install' ? 'Keep mine' : 'Dismiss'}
             </button>
           </div>
         )}
 
-        <Suspense fallback={<p className="py-16 text-center text-sm text-muted">Loading …</p>}>
+        <Suspense fallback={<p className="py-20 text-center text-sm text-muted">Loading …</p>}>
           {view === 'customize' ? (
             <CustomizeView
               config={config}
@@ -445,7 +443,6 @@ export default function App() {
               {...actions}
               onStartOnboarding={startOnboarding}
               onInstall={() => navigate('install', encodeInstallHash(config))}
-              onDone={() => navigate('dashboard')}
             />
           ) : view === 'install' ? (
             <InstallView config={shared ?? config} pending={shared !== null} adopted={adopted} onDone={() => navigate('dashboard')} />
@@ -466,51 +463,24 @@ export default function App() {
             <Onboarding
               config={config}
               {...actions}
-              onFinish={() => {
-                markOnboarded();
-                navigate('dashboard');
-              }}
+              onFinish={() => navigate('dashboard')}
               onCancel={() => navigate('dashboard')}
             />
           ) : enabled.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-line px-6 py-16 text-center">
-              <p className="text-lg font-semibold">No sources active</p>
-              <p className="mt-1 text-sm text-muted">Choose topics or add your own news sites.</p>
-              <div className="mt-5 flex flex-wrap justify-center gap-2">
-                <button
-                  type="button"
-                  className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-accent-ink"
-                  onClick={startOnboarding}
-                >
+            <div className="rounded-lg border border-dashed border-field/50 px-6 py-20 text-center">
+              <p className="text-2xl font-semibold tracking-tight">No sources active</p>
+              <p className="mt-2 text-sm text-muted">Choose topics or add your own news sites.</p>
+              <div className="mt-6 flex flex-wrap justify-center gap-2">
+                <button type="button" className={btnPrimary} onClick={startOnboarding}>
                   Start guided setup
                 </button>
-                <button
-                  type="button"
-                  className="h-10 rounded-lg border border-line px-4 text-sm font-medium"
-                  onClick={() => navigate('customize')}
-                >
+                <button type="button" className={btnSecondary} onClick={() => navigate('customize')}>
                   Customize
                 </button>
               </div>
             </div>
           ) : (
             <>
-              {showWelcome && (
-                <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
-                  <p className="min-w-0 flex-1 basis-64">
-                    <span className="font-semibold">New here?</span>{' '}
-                    <span className="text-muted">
-                      Pick your language and topics such as Security, Development or AI for your dashboard in a few steps.
-                    </span>
-                  </p>
-                  <button type="button" className="h-10 rounded-lg bg-accent px-3 font-semibold text-accent-ink sm:h-9" onClick={startOnboarding}>
-                    Start guided setup
-                  </button>
-                  <button type="button" className="h-10 rounded-lg border border-line px-3 font-medium sm:h-9" onClick={dismissWelcome}>
-                    Not now
-                  </button>
-                </div>
-              )}
               <TopStories
                 stories={stories}
                 now={now}
@@ -519,23 +489,18 @@ export default function App() {
                 isSaved={isSaved}
                 onSave={(story) => onSave(story.article, story.source)}
               />
-              <div className="mb-3 flex items-baseline justify-between gap-4">
-                <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                  {needle ? `Results for "${query.trim()}"` : 'Your sources'}
-                </h2>
-                {!needle && <p className="hidden text-xs text-muted sm:block">Drag a card by its handle to reorder</p>}
-              </div>
+              <SectionHeading title={needle ? `Results for “${query.trim()}”` : 'Your sources'} />
               {topics.length > 1 && <TopicFilter topics={topics} value={topic} onChange={setTopic} />}
               {mutedCount > 0 && (
-                <p className="mb-3 text-xs text-muted">
+                <p className="mb-4 text-xs text-muted">
                   {mutedCount} {mutedCount === 1 ? 'headline' : 'headlines'} hidden by your muted words ·{' '}
-                  <button type="button" className="underline underline-offset-4 hover:text-ink" onClick={() => navigate('customize')}>
+                  <button type="button" className={`${btnLink} text-xs`} onClick={() => navigate('customize')}>
                     Edit
                   </button>
                 </p>
               )}
               {items.length === 0 ? (
-                <p className="rounded-xl border border-dashed border-line px-6 py-12 text-center text-sm text-muted">
+                <p className="rounded-lg border border-dashed border-field/50 px-6 py-14 text-center text-sm text-muted">
                   No articles found.
                 </p>
               ) : (
@@ -560,26 +525,28 @@ export default function App() {
         </Suspense>
       </main>
 
-      <footer className="page-x mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-6 gap-y-3 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-4 text-xs text-muted">
-        <p className="min-w-0 flex-1 basis-72">
-          Headlines, excerpts and images are collected automatically from publishers' public feeds and websites
-          and remain the property of their owners.
-          <br />
-          We do not review or endorse this content and are not responsible
-          for it or for the sites it links to.
-        </p>
-        <nav aria-label="Legal" className="flex flex-wrap gap-x-4 gap-y-1">
-          {LEGAL_DOCS.map((doc) => (
-            <a
-              key={doc.id}
-              href={VIEW_HASH[doc.id]}
-              aria-current={view === doc.id ? 'page' : undefined}
-              className="underline-offset-4 hover:text-ink hover:underline aria-[current=page]:text-ink"
-            >
-              {doc.title}
-            </a>
-          ))}
-        </nav>
+      <footer className="page-x mx-auto max-w-[1440px] pb-[max(2.5rem,env(safe-area-inset-bottom))] text-xs leading-relaxed text-muted">
+        <div className="flex flex-wrap items-start gap-x-8 gap-y-4 pt-6">
+          <p className="min-w-0 flex-1 basis-72">
+            Headlines, excerpts and images are collected automatically from publishers' public feeds and websites
+            and remain the property of their owners.
+            <br />
+            We do not review or endorse this content and are not responsible
+            for it or for the sites it links to.
+          </p>
+          <nav aria-label="Legal" className="flex flex-wrap gap-x-5 gap-y-1 font-medium">
+            {LEGAL_DOCS.map((doc) => (
+              <a
+                key={doc.id}
+                href={VIEW_HASH[doc.id]}
+                aria-current={view === doc.id ? 'page' : undefined}
+                className="inline-flex min-h-11 items-center underline-offset-4 transition-colors duration-150 hover:text-ink hover:underline aria-[current=page]:text-ink sm:min-h-0"
+              >
+                {doc.title}
+              </a>
+            ))}
+          </nav>
+        </div>
       </footer>
 
       {view !== 'onboarding' && <BackToTop />}

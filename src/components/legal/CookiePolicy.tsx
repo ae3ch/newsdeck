@@ -37,11 +37,6 @@ const ENTRIES: { key: string; purpose: string; kept: string }[] = [
     purpose: 'Preview image addresses that have already been looked up, so they are not requested again.',
     kept: 'Limited to the 1,500 most recent entries; removed when you clear site data.',
   },
-  {
-    key: 'tech-news:onboarded',
-    purpose: 'Remembers that you finished or dismissed the setup hint, so it is not shown again.',
-    kept: 'Until you clear site data.',
-  },
 ];
 
 export function CookiePolicy() {
@@ -60,9 +55,9 @@ export function CookiePolicy() {
           is data kept on your device; unlike a cookie, it is never sent along with requests automatically. The site
           stores exactly these entries:
         </P>
-        <div className="overflow-x-auto rounded-lg border border-line">
+        <div className="overflow-x-auto rounded-md border border-line">
           <table className="w-full min-w-[34rem] text-left text-sm">
-            <thead className="bg-sunken text-xs uppercase tracking-wider text-muted">
+            <thead className="bg-sunken text-[11px] uppercase tracking-[0.12em] text-muted">
               <tr>
                 <th scope="col" className="px-3 py-2 font-semibold">Entry</th>
                 <th scope="col" className="px-3 py-2 font-semibold">Purpose</th>

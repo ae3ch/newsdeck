@@ -6,6 +6,7 @@ import { CustomSources } from './CustomSources';
 import { DisplaySettings } from './DisplaySettings';
 import { LanguagePicker } from './LanguagePicker';
 import { SourceChecklist } from './SourceChecklist';
+import { btnLink, pageTitle, panel, panelTitle } from '../ui';
 import { primaryButton, textButton, type SetupActions } from './types';
 
 interface Props extends SetupActions {
@@ -58,23 +59,23 @@ export function Onboarding({ config, onFinish, onCancel, ...actions }: Props) {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
         <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" aria-label="Progress">
           {STEPS.map((label, i) => (
             <li key={label} className="flex items-center gap-2">
-              {i > 0 && <span aria-hidden="true" className="h-px w-3 bg-line sm:w-5" />}
+              {i > 0 && <span aria-hidden="true" className={`h-0.5 w-3 sm:w-6 ${i <= step ? 'bg-accent' : 'bg-line'}`} />}
               <button
                 type="button"
                 onClick={() => go(i)}
                 aria-current={i === step ? 'step' : undefined}
                 aria-label={`Step ${i + 1}: ${label}`}
-                className={`flex items-center gap-2 rounded-full p-1 sm:pr-3 ${i === step ? 'pr-3' : ''} ${
-                  i === step ? 'bg-sunken font-semibold text-ink' : 'text-muted hover:text-ink'
+                className={`flex min-h-11 items-center gap-2 rounded-md px-1 transition-colors duration-150 sm:min-h-9 sm:pr-3 ${i === step ? 'pr-3' : ''} ${
+                  i === step ? 'bg-sunken font-semibold text-ink' : 'text-muted hover:bg-sunken/60 hover:text-ink'
                 }`}
               >
                 <span
-                  className={`grid h-6 w-6 place-items-center rounded-full font-mono text-xs ${
-                    i <= step ? 'bg-accent text-accent-ink' : 'border border-line'
+                  className={`grid h-7 w-7 place-items-center rounded-full text-xs font-bold tabular-nums ${
+                    i <= step ? 'bg-accent text-accent-ink' : 'border border-field/60'
                   }`}
                 >
                   {i + 1}
@@ -84,17 +85,17 @@ export function Onboarding({ config, onFinish, onCancel, ...actions }: Props) {
             </li>
           ))}
         </ol>
-        <button type="button" className="text-sm text-muted underline-offset-4 hover:text-ink hover:underline" onClick={onCancel}>
+        <button type="button" className={`${btnLink} inline-flex min-h-11 items-center sm:min-h-0`} onClick={onCancel}>
           Leave setup
         </button>
       </div>
 
-      <h1 ref={heading} tabIndex={-1} className="text-2xl font-semibold tracking-tight outline-none">
+      <h1 ref={heading} tabIndex={-1} className={`${pageTitle} outline-none`}>
         {titles[step]}
       </h1>
-      <p className="mt-1.5 max-w-2xl text-sm text-muted">{hints[step]}</p>
+      <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">{hints[step]}</p>
 
-      <div className="mt-6">
+      <div className="mt-8">
         {step === 0 && <LanguagePicker config={config} onChange={(languages) => actions.onSettings({ languages })} />}
 
         {step === 1 && (
@@ -102,7 +103,7 @@ export function Onboarding({ config, onFinish, onCancel, ...actions }: Props) {
             <CategoryTiles sources={sources} onSetMany={actions.onSetMany} />
             <button
               type="button"
-              className="mt-4 text-sm text-muted underline-offset-4 hover:text-ink hover:underline disabled:opacity-40 disabled:hover:no-underline"
+              className={`${btnLink} mt-5`}
               disabled={activeCategories.length === 0}
               onClick={() => actions.onSetMany(sources.filter((s) => !s.custom).map((s) => s.id), false)}
             >
@@ -114,17 +115,17 @@ export function Onboarding({ config, onFinish, onCancel, ...actions }: Props) {
         {step === 2 && (
           <div className="space-y-8">
             {chosen.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-line px-5 py-6 text-sm text-muted">
+              <p className="rounded-lg border border-dashed border-field/50 px-5 py-6 text-sm text-muted">
                 You have not chosen a topic. Go back one step or add your own news sites below.
               </p>
             ) : (
               <SourceChecklist sources={sources} categoryIds={chosen} onToggle={actions.onToggle} onSetMany={actions.onSetMany} />
             )}
-            <section aria-labelledby="ob-custom" className="rounded-xl border border-line bg-surface p-4 sm:p-5">
-              <h2 id="ob-custom" className="text-base font-semibold">
+            <section aria-labelledby="ob-custom" className={panel}>
+              <h2 id="ob-custom" className={panelTitle}>
                 Missing a site?
               </h2>
-              <p className="mb-4 mt-1 text-sm text-muted">
+              <p className="mb-5 mt-1.5 text-sm leading-relaxed text-muted">
                 Enter the address of a news site or an RSS/Atom feed. The feed is detected automatically.
               </p>
               <CustomSources sources={config.sources} onAdd={actions.onAdd} onToggle={actions.onToggle} onRemove={actions.onRemove} />
@@ -133,13 +134,13 @@ export function Onboarding({ config, onFinish, onCancel, ...actions }: Props) {
         )}
 
         {step === 3 && (
-          <div className="rounded-xl border border-line bg-surface p-4 sm:p-5">
+          <div className={panel}>
             <DisplaySettings settings={settings} onSettings={actions.onSettings} />
           </div>
         )}
       </div>
 
-      <div className="sticky bottom-0 mt-8 flex flex-wrap items-center gap-3 border-t border-line bg-bg/95 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur">
+      <div className="sticky bottom-0 mt-10 flex flex-wrap items-center gap-3 border-t border-line bg-bg/90 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-md">
         <p className="min-w-0 flex-1 basis-40 text-sm text-muted" role="status">
           {activeCount === 0 ? 'No sources active yet' : `${activeCount} ${activeCount === 1 ? 'source' : 'sources'} active`} ·
           your selection is saved immediately

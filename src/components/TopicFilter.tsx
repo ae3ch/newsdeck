@@ -14,7 +14,7 @@ export function TopicFilter({ topics, value, onChange }: Props) {
     <div
       role="group"
       aria-label="Filter sources by topic"
-      className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden"
+      className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden"
     >
       {chips.map((chip) => {
         const on = chip.id === value;
@@ -24,8 +24,8 @@ export function TopicFilter({ topics, value, onChange }: Props) {
             type="button"
             aria-pressed={on}
             onClick={() => onChange(chip.id)}
-            className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm font-medium transition-colors sm:h-8 ${
-              on ? 'border-ink bg-ink text-bg' : 'border-line bg-surface text-muted hover:border-muted hover:text-ink'
+            className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors duration-150 sm:h-8 ${
+              on ? 'border-ink bg-ink text-bg' : 'border-line bg-surface text-ink/80 hover:border-ink hover:text-ink active:bg-sunken'
             }`}
           >
             {chip.label}

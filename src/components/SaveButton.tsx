@@ -18,9 +18,9 @@ export function SaveButton({ saved, title, onToggle, className = '', tone }: Pro
       aria-pressed={saved}
       aria-label={saved ? `Remove from saved: ${title}` : `Save for later: ${title}`}
       title={saved ? 'Remove from saved' : 'Save for later'}
-      className={`grid shrink-0 place-items-center rounded-md transition-colors ${
+      className={`grid shrink-0 place-items-center transition-[color,background-color,opacity] duration-150 ${
         tone ?? (saved ? 'text-accent hover:text-accent' : 'text-muted hover:text-accent')
-      } ${className}`}
+      } ${/rounded/.test(className) ? '' : 'rounded-md'} ${className}`}
     >
       <BookmarkIcon filled={saved} width={17} height={17} />
     </button>

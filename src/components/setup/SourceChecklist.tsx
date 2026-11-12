@@ -2,6 +2,8 @@ import { CATEGORIES } from '../../data/defaultSources';
 import type { Source } from '../../lib/config';
 import { Favicon } from '../Favicon';
 import { smallButton } from './types';
+import { kicker } from '../ui';
+import { ChevronRightIcon } from '../icons';
 
 interface Props {
   sources: Source[];
@@ -20,13 +22,13 @@ function Rows({ members, onToggle, brokenFeeds }: { members: Source[]; onToggle:
     <ul className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
       {members.map((s) => (
         <li key={s.id} className="min-w-0">
-          <label className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-2.5 hover:bg-sunken sm:py-1.5">
+          <label className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-2.5 transition-colors duration-150 hover:bg-sunken sm:py-1.5">
             <input type="checkbox" checked={s.enabled} onChange={() => onToggle(s.id)} className="h-4 w-4 shrink-0 accent-(--accent)" />
             <Favicon siteUrl={s.siteUrl} name={s.name} size={16} />
             <span className={`min-w-0 flex-1 truncate text-sm ${s.enabled ? 'font-medium' : 'text-muted'}`}>{s.name}</span>
             {brokenFeeds?.has(s.feedUrl) && <span className="shrink-0 text-xs text-danger">Not loading</span>}
             {s.lang && (
-              <span className="shrink-0 font-mono text-[10px] uppercase text-muted" title={s.lang === 'de' ? 'German' : 'English'}>
+              <span className={`${kicker} shrink-0 text-[10px] text-muted`} title={s.lang === 'de' ? 'German' : 'English'}>
                 {s.lang}
               </span>
             )}
@@ -41,7 +43,7 @@ function Rows({ members, onToggle, brokenFeeds }: { members: Source[]; onToggle:
 export function SourceChecklist({ sources, categoryIds, collapsible = false, onToggle, onSetMany, brokenFeeds }: Props) {
   const cats = CATEGORIES.filter((c) => !categoryIds || categoryIds.includes(c.id));
   return (
-    <div className={collapsible ? 'divide-y divide-line rounded-lg border border-line' : 'space-y-6'}>
+    <div className={collapsible ? 'divide-y divide-line rounded-md border border-line' : 'space-y-6'}>
       {cats.map((cat) => {
         const members = sources.filter((s) => !s.custom && s.category === cat.id);
         if (members.length === 0) return null;
@@ -58,7 +60,7 @@ export function SourceChecklist({ sources, categoryIds, collapsible = false, onT
           </span>
         );
         const count = (
-          <span className={`font-mono text-xs ${active > 0 ? 'text-accent' : 'text-muted'}`}>
+          <span className={`text-xs font-semibold tabular-nums ${active > 0 ? 'text-accent' : 'text-muted'}`}>
             {active}/{members.length}
           </span>
         );
@@ -66,9 +68,12 @@ export function SourceChecklist({ sources, categoryIds, collapsible = false, onT
         if (collapsible) {
           return (
             <details key={cat.id} className="group">
-              <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-3 hover:bg-sunken sm:py-2.5 [&::-webkit-details-marker]:hidden">
-                <span aria-hidden="true" className="w-3 text-xs text-muted transition-transform group-open:rotate-90">
-                  ▸
+              <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 px-3 py-3 transition-colors duration-150 hover:bg-sunken sm:min-h-0 sm:py-2.5 [&::-webkit-details-marker]:hidden">
+                <span
+                  aria-hidden="true"
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-line bg-surface text-ink transition-[transform,border-color] duration-200 group-open:rotate-90 group-hover:border-ink"
+                >
+                  <ChevronRightIcon width={16} height={16} />
                 </span>
                 <span className="flex-1 text-sm font-semibold">{cat.label}</span>
                 {count}
@@ -85,8 +90,8 @@ export function SourceChecklist({ sources, categoryIds, collapsible = false, onT
         }
         return (
           <section key={cat.id} aria-label={cat.label}>
-            <div className="mb-2 flex items-center gap-3 border-b border-line pb-2">
-              <h3 className="text-sm font-semibold">{cat.label}</h3>
+            <div className="mb-2 flex items-center gap-3">
+              <h3 className="text-base font-semibold tracking-tight">{cat.label}</h3>
               {count}
               <span className="ml-auto">{bulk}</span>
             </div>

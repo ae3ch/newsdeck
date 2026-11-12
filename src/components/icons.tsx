@@ -100,6 +100,17 @@ export const PlusIcon = (p: P) => (
   </Icon>
 );
 
+export const ChevronRightIcon = (p: P) => (
+  <Icon strokeWidth="2.2" {...p}>
+    <path d="m9 6 6 6-6 6" />
+  </Icon>
+);
+export const CheckIcon = (p: P) => (
+  <Icon strokeWidth="2.6" {...p}>
+    <path d="m5 12.5 4.5 4.5L19 7.5" />
+  </Icon>
+);
+
 export function Logo() {
   return (
     <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">

@@ -24,7 +24,7 @@ export function BackToTop() {
       }}
       aria-label="Back to top"
       title="Back to top"
-      className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-[max(1.25rem,env(safe-area-inset-right))] z-40 grid h-11 w-11 place-items-center rounded-full border border-line bg-surface text-ink shadow-lg transition-colors hover:border-accent hover:text-accent"
+      className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-[max(1.25rem,env(safe-area-inset-right))] z-40 grid h-12 w-12 place-items-center rounded-full bg-ink text-bg shadow-lg shadow-black/15 transition-opacity duration-150 hover:opacity-85 active:opacity-75"
     >
       <ArrowUpIcon width={20} height={20} />
     </button>
